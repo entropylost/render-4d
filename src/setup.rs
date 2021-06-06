@@ -3,7 +3,6 @@ use crate::VertexBuffer;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
 use std::borrow::Cow;
-// use winit::window::Window;
 use byte_slice_cast::{AsByteSlice, AsSliceOf};
 use futures::executor::block_on;
 use wgpu::util::DeviceExt;

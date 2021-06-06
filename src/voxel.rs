@@ -1,3 +1,4 @@
+use std::ops::Index;
 use std::num::NonZeroU32;
 use wgpu::ImageDataLayout;
 use palette::Srgba;
@@ -63,4 +64,8 @@ impl World3d {
     pub fn palette_bytes(&self) -> &[u8] {
         &[0]
     }
+}
+
+impl Index<[u32; 3]> for World3d {
+
 }
