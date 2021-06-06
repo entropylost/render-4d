@@ -2,6 +2,8 @@
 #![feature(const_generics)]
 
 use bevy::prelude::*;
+use nalgebra::Vector3;
+use palette::Srgba;
 use wgpu::Buffer;
 
 mod voxel;
@@ -14,7 +16,9 @@ use render::*;
 struct VertexBuffer(Buffer);
 
 fn main() {
-    let world = World3d::new(100);
+    let mut world = World3d::new(5);
+    world[Vector3::new(1, 1, 1)] =
+        world.insert_type(VoxelType::new(Srgba::new(0.212, 0.247, 0.278, 1.0)));
 
     let mut app = App::build();
     app.insert_resource(WindowDescriptor {
@@ -27,8 +31,7 @@ fn main() {
     .insert_resource(WorldSize(world.size()))
     .insert_resource(world);
     app.add_plugins(DefaultPlugins);
-    app
-        .add_startup_system(setup.system())
+    app.add_startup_system(setup.system())
         .add_system(render.system());
     app.run();
 }

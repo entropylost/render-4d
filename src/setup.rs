@@ -2,9 +2,9 @@ use crate::voxel::WorldSize;
 use crate::VertexBuffer;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
-use std::borrow::Cow;
 use byte_slice_cast::{AsByteSlice, AsSliceOf};
 use futures::executor::block_on;
+use std::borrow::Cow;
 use wgpu::util::DeviceExt;
 use wgpu::*;
 
