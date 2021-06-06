@@ -1,0 +1,32 @@
+[package]
+name = "render-4d"
+version = "0.1.0"
+edition = "2018"
+publish = false
+build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bytemuck = { version = "1.5.1", features = ["derive"] }
+nalgebra = { version = "0.26.2", features = ["bytemuck"] }
+wgpu = "0.8.1"
+winit = { version = "0.25.0", features = ["x11"] }
+futures = { version = "0.3.15", features = ["executor"] }
+palette = "0.5.0"
+byte-slice-cast = "1.0.0"
+ndarray = "0.15.2"
+arrayvec = "0.7.0"
+[dependencies.bevy]
+git = "https://github.com/bevyengine/bevy.git"
+default-features = false
+features = [
+    "bevy_winit",
+    "x11"
+]
+
+[build-dependencies]
+anyhow = "1.0.40"
+fs_extra = "1.2.0"
+glob = "0.3.0"
+shaderc = "0.7.2"
