@@ -1,6 +1,7 @@
 #![allow(incomplete_features)]
 #![feature(const_generics)]
 
+use bevy::diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use nalgebra::Vector3;
 use palette::Srgba;
@@ -30,8 +31,12 @@ fn main() {
     })
     .insert_resource(WorldSize(world.size()))
     .insert_resource(world);
-    app.add_plugins(DefaultPlugins);
+    app.add_plugins(DefaultPlugins)
+        .add_plugin(DiagnosticsPlugin)
+        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin);
     app.add_startup_system(setup.system())
-        .add_system(render.system());
+        .add_system(render.system())
+        .add_system(update_world_texture.system());
     app.run();
 }

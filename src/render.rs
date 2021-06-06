@@ -7,6 +7,7 @@ pub(crate) fn render(
     queue: Res<Queue>,
     swap_chain: Res<SwapChain>,
     render_pipeline: Res<RenderPipeline>,
+    bind_group: Res<BindGroup>,
     vertex_buffer: Res<VertexBuffer>,
 ) {
     let vertex_buffer = &vertex_buffer.0;
@@ -34,6 +35,7 @@ pub(crate) fn render(
             depth_stencil_attachment: None,
         });
         render_pass.set_pipeline(&render_pipeline);
+        render_pass.set_bind_group(0, &bind_group, &[]);
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.draw(0..6, 0..1);
     }

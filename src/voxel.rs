@@ -1,4 +1,5 @@
 use arrayvec::ArrayVec;
+use bevy::prelude::*;
 use bytemuck::Pod;
 use bytemuck::Zeroable;
 use derive_new::new;
@@ -9,7 +10,12 @@ use palette::Srgba;
 use std::num::NonZeroU32;
 use std::ops::Index;
 use std::ops::IndexMut;
+use wgpu::Extent3d;
+use wgpu::ImageCopyTexture;
 use wgpu::ImageDataLayout;
+use wgpu::Origin3d;
+use wgpu::Queue;
+use wgpu::Texture;
 
 pub struct WorldSize(pub u32);
 
@@ -45,6 +51,8 @@ pub struct World3d {
     types_internal: ArrayVec<VoxelTypeInternal, 256>,
 }
 
+pub struct World3dTexture(pub Texture, pub Extent3d);
+
 impl World3d {
     pub fn new(size: u32) -> World3d {
         let size = size as usize;
@@ -75,7 +83,7 @@ impl World3d {
         self.voxels.shape()[0] as u32
     }
 
-    pub fn layout(&self) -> ImageDataLayout {
+    pub fn texture_layout(&self) -> ImageDataLayout {
         let size = self.size();
         ImageDataLayout {
             offset: 0,
@@ -106,5 +114,20 @@ impl IndexMut<Vector3<u32>> for World3d {
     fn index_mut(&mut self, index: Vector3<u32>) -> &mut Self::Output {
         let index = index.cast::<usize>();
         &mut self.voxels[[index.x, index.y, index.z]]
+    }
+}
+
+pub fn update_world_texture(world: Res<World3d>, texture: Res<World3dTexture>, queue: Res<Queue>) {
+    if world.is_changed() {
+        queue.write_texture(
+            ImageCopyTexture {
+                texture: &texture.0,
+                mip_level: 0,
+                origin: Origin3d::ZERO,
+            },
+            world.voxel_bytes(),
+            world.texture_layout(),
+            texture.1,
+        );
     }
 }

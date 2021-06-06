@@ -1,3 +1,4 @@
+use crate::voxel::World3dTexture;
 use crate::voxel::WorldSize;
 use crate::VertexBuffer;
 use bevy::prelude::*;
@@ -48,26 +49,6 @@ pub(crate) fn setup(
     ))
     .expect("Failed to create device");
 
-    let world_3d = device.create_texture(&TextureDescriptor {
-        label: None,
-        size: Extent3d {
-            width: world_size,
-            height: world_size,
-            depth_or_array_layers: world_size,
-        },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: TextureDimension::D3,
-        format: TextureFormat::R8Uint,
-        usage: TextureUsage::COPY_DST | TextureUsage::SAMPLED | TextureUsage::RENDER_ATTACHMENT,
-    });
-
-    let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: Some("Vertex Buffer"),
-        contents: VERTICIES.as_byte_slice(),
-        usage: BufferUsage::VERTEX,
-    });
-
     let sc_desc = SwapChainDescriptor {
         usage: TextureUsage::RENDER_ATTACHMENT,
         format: adapter.get_swap_chain_preferred_format(&surface).unwrap(),
@@ -76,6 +57,12 @@ pub(crate) fn setup(
         present_mode: PresentMode::Fifo,
     };
     let swap_chain = device.create_swap_chain(&surface, &sc_desc);
+
+    let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label: Some("Vertex Buffer"),
+        contents: VERTICIES.as_byte_slice(),
+        usage: BufferUsage::VERTEX,
+    });
 
     let shader_vert = device.create_shader_module(&ShaderModuleDescriptor {
         label: None,
@@ -96,9 +83,71 @@ pub(crate) fn setup(
         flags: ShaderFlags::all(),
     });
 
+    let world_3d_size = Extent3d {
+        width: world_size,
+        height: world_size,
+        depth_or_array_layers: world_size,
+    };
+    let world_3d = device.create_texture(&TextureDescriptor {
+        label: None,
+        size: world_3d_size,
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: TextureDimension::D3,
+        format: TextureFormat::R8Uint,
+        usage: TextureUsage::COPY_DST | TextureUsage::SAMPLED | TextureUsage::RENDER_ATTACHMENT,
+    });
+    let world_3d_view = world_3d.create_view(&TextureViewDescriptor::default());
+    let world_3d_sampler = device.create_sampler(&SamplerDescriptor {
+        mag_filter: FilterMode::Nearest,
+        min_filter: FilterMode::Nearest,
+        mipmap_filter: FilterMode::Nearest,
+        ..Default::default()
+    });
+
+    let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+        label: None,
+        entries: &[
+            BindGroupLayoutEntry {
+                binding: 0,
+                visibility: ShaderStage::FRAGMENT,
+                ty: BindingType::Texture {
+                    multisampled: false,
+                    view_dimension: TextureViewDimension::D3,
+                    sample_type: TextureSampleType::Uint,
+                },
+                count: None,
+            },
+            BindGroupLayoutEntry {
+                binding: 1,
+                visibility: ShaderStage::FRAGMENT,
+                ty: BindingType::Sampler {
+                    comparison: false,
+                    filtering: false,
+                },
+                count: None,
+            },
+        ],
+    });
+
+    let bind_group = device.create_bind_group(&BindGroupDescriptor {
+        label: None,
+        layout: &bind_group_layout,
+        entries: &[
+            wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&world_3d_view),
+            },
+            wgpu::BindGroupEntry {
+                binding: 1,
+                resource: wgpu::BindingResource::Sampler(&world_3d_sampler),
+            },
+        ],
+    });
+
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: None,
-        bind_group_layouts: &[],
+        bind_group_layouts: &[&bind_group_layout],
         push_constant_ranges: &[],
     });
 
@@ -129,4 +178,6 @@ pub(crate) fn setup(
     commands.insert_resource(swap_chain);
     commands.insert_resource(render_pipeline);
     commands.insert_resource(VertexBuffer(vertex_buffer));
+    commands.insert_resource(World3dTexture(world_3d, world_3d_size));
+    commands.insert_resource(bind_group);
 }
