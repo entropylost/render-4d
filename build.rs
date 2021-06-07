@@ -54,6 +54,7 @@ fn main() -> Result<()> {
 
     let mut compiler = shaderc::Compiler::new().context("Unable to create shader compiler")?;
     let mut compile_options = shaderc::CompileOptions::new().unwrap();
+    compile_options.set_generate_debug_info();
     compile_options.set_include_callback(|included_src, include_type, _src, _depth| {
         if shaderc::IncludeType::Relative == include_type {
             eprintln!("Only standard paths are supported.");

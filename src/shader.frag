@@ -27,7 +27,6 @@ layout (set = 1, binding = 0) uniform utexture3D t_world_3d;
 layout (set = 1, binding = 1) uniform sampler s_world_3d;
 
 Ray generate_ray() {
-    // Also adding 0.5 here, because we want it to stay in the middle of the pixel
     vec2 pixel_ndc = (gl_FragCoord.xy) / u_camera.screen_size;
     vec2 pixel_camera = 2 * pixel_ndc - 1;
     pixel_camera.y *= -1;

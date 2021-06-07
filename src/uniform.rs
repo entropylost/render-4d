@@ -49,7 +49,7 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>, windows: Res<W
     commands.insert_resource(Uniforms {
         camera: Player::new(
             Vector3::new(4.0, 4.0, 4.0),
-            Vector3::new(1.0, 1.0, -1.0),
+            Vector3::new(-1.0, -1.0, -1.0),
             1.8,
         )
         .to_internal(Vector2::new(window.width(), window.height())),

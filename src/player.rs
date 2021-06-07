@@ -24,9 +24,9 @@ impl Player {
         let r = self.rotation_matrix();
         #[rustfmt::skip]
         let rotation = Matrix4x3::new(
-            r[(0, 0)], r[(1, 0)], r[(2, 0)],
-            r[(0, 1)], r[(1, 1)], r[(2, 1)],
-            r[(0, 2)], r[(1, 2)], r[(2, 2)],
+            r[(0, 0)], r[(0, 1)], r[(0, 2)],
+            r[(1, 0)], r[(1, 1)], r[(1, 2)],
+            r[(2, 0)], r[(2, 1)], r[(2, 2)],
             0.0, 0.0, 0.0
         );
         CameraInternal {
