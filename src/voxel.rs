@@ -18,9 +18,17 @@ impl VoxelType {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug)]
 pub struct VoxelTypeInternal {
     color: LinSrgba,
+}
+
+impl Default for VoxelTypeInternal {
+    fn default() -> Self {
+        VoxelTypeInternal {
+            color: LinSrgba::new(0.0, 0.0, 0.0, 0.0),
+        }
+    }
 }
 
 unsafe impl Zeroable for VoxelTypeInternal {}

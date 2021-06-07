@@ -17,6 +17,7 @@ use nalgebra::Vector3;
 use palette::Srgba;
 use wgpu::Buffer;
 
+mod player;
 mod render;
 mod setup;
 mod uniform;
@@ -76,6 +77,13 @@ fn main() {
 }
 
 fn init_world_data(mut world: ResMut<World3d>) {
-    world[Vector3::new(1, 1, 1)] =
-        world.insert_type(VoxelType::new(Srgba::new(0.212, 0.247, 0.278, 1.0)));
+    let normal_type = world.insert_type(VoxelType::new(Srgba::new(0.212, 0.247, 0.278, 1.0)));
+
+    for i in 0..2 {
+        for j in 0..2 {
+            for k in 3..5 {
+                world[Vector3::new(i, j, k)] = normal_type;
+            }
+        }
+    }
 }

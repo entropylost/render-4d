@@ -1,20 +1,24 @@
+use crate::player::CameraInternal;
+use crate::player::Player;
 use crate::voxel::VoxelTypeInternal;
 use bevy::prelude::*;
 use bytemuck::*;
-use nalgebra::Matrix4;
+use nalgebra::Vector2;
+use nalgebra::Vector3;
 use wgpu::*;
 
 #[repr(C)]
 #[derive(Pod, Zeroable, Clone, Copy, Debug)]
 pub struct Uniforms {
-    pub projection_matrix: Matrix4<f32>,
+    pub camera: CameraInternal,
     pub voxel_types: [VoxelTypeInternal; 256],
 }
 
 pub struct UniformBuffer(pub Buffer);
 pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
-pub fn init_uniforms(mut commands: Commands, device: Res<Device>) {
+pub fn init_uniforms(mut commands: Commands, device: Res<Device>, windows: Res<Windows>) {
+    let window = windows.get_primary().unwrap();
     let buffer = device.create_buffer(&BufferDescriptor {
         label: Some("uniform-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
@@ -43,8 +47,12 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>) {
         }],
     });
     commands.insert_resource(Uniforms {
-        // TODO: CHANGE
-        projection_matrix: Default::default(),
+        camera: Player::new(
+            Vector3::new(2.5, 2.5, 0.0),
+            Vector3::new(0.0, 0.0, 1.0),
+            1.8,
+        )
+        .to_internal(Vector2::new(window.width(), window.height())),
         voxel_types: [Default::default(); 256],
     });
     commands.insert_resource(UniformBuffer(buffer));
