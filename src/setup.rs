@@ -37,7 +37,7 @@ pub(crate) fn setup(
 
     let (device, queue) = block_on(adapter.request_device(
         &DeviceDescriptor {
-            label: None,
+            label: Some("device"),
             features: Features::empty(),
             limits: Limits::default(),
         },
@@ -55,7 +55,7 @@ pub(crate) fn setup(
     let swap_chain = device.create_swap_chain(&surface, &sc_desc);
 
     let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-        label: Some("Vertex Buffer"),
+        label: Some("vertex-buffer"),
         contents: cast_slice(VERTICIES),
         usage: BufferUsage::VERTEX,
     });

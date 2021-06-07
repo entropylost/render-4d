@@ -16,13 +16,13 @@ pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
 pub fn init_uniforms(mut commands: Commands, device: Res<Device>) {
     let buffer = device.create_buffer(&BufferDescriptor {
-        label: None,
+        label: Some("uniform-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
         usage: BufferUsage::UNIFORM | BufferUsage::COPY_DST,
         mapped_at_creation: false,
     });
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-        label: None,
+        label: Some("uniform-bind-group-layout"),
         entries: &[BindGroupLayoutEntry {
             binding: 0,
             visibility: ShaderStage::FRAGMENT,
@@ -35,7 +35,7 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>) {
         }],
     });
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-        label: None,
+        label: Some("uniform-bind-group"),
         layout: &bind_group_layout,
         entries: &[wgpu::BindGroupEntry {
             binding: 0,

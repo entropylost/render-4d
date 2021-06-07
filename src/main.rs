@@ -26,7 +26,6 @@ mod world;
 pub struct VertexBuffer(Buffer);
 
 fn main() {
-
     let mut app = App::build();
     app.insert_resource(WindowDescriptor {
         title: "render-4d".to_string(),
@@ -50,7 +49,11 @@ fn main() {
         "startup-pipeline",
         SystemStage::single_threaded(),
     )
-    .add_startup_stage_after("startup-pipeline", "startup-finish", SystemStage::single_threaded());
+    .add_startup_stage_after(
+        "startup-pipeline",
+        "startup-finish",
+        SystemStage::single_threaded(),
+    );
     app.add_startup_system(setup.system())
         .add_startup_system_to_stage("startup-bind-groups", init_uniforms.system())
         .add_startup_system_to_stage("startup-bind-groups", init_world_3d.system())

@@ -2,8 +2,8 @@ use crate::uniform::UniformBindGroup;
 use crate::world::World3dBindGroup;
 use crate::VertexBuffer;
 use bevy::prelude::*;
-use byteorder::LittleEndian;
 use byteorder::ByteOrder;
+use byteorder::LittleEndian;
 use std::borrow::Cow;
 use wgpu::*;
 
@@ -21,14 +21,14 @@ pub fn init_render_pipeline(
     world_3d_bind_group: Res<World3dBindGroup>,
 ) {
     let shader_vert = device.create_shader_module(&ShaderModuleDescriptor {
-        label: None,
+        label: Some("vertex-shader"),
         source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
             "shader.vert.spv"
         )))),
         flags: ShaderFlags::VALIDATION,
     });
     let shader_frag = device.create_shader_module(&ShaderModuleDescriptor {
-        label: None,
+        label: Some("fragment-shader"),
         source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
             "shader.frag.spv"
         )))),
@@ -36,13 +36,13 @@ pub fn init_render_pipeline(
     });
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
-        label: None,
+        label: Some("render-pipeline-layout"),
         bind_group_layouts: &[&uniform_bind_group.1, &world_3d_bind_group.1],
         push_constant_ranges: &[],
     });
 
     let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
-        label: None,
+        label: Some("render-pipeline"),
         layout: Some(&pipeline_layout),
         vertex: VertexState {
             module: &shader_vert,
@@ -78,12 +78,12 @@ pub fn render(
     let vertex_buffer = &vertex_buffer.0;
     let frame = swap_chain.get_current_frame().unwrap().output;
     let mut encoder = device.create_command_encoder(&CommandEncoderDescriptor {
-        label: Some("Render Encoder"),
+        label: Some("render-encoder"),
     });
 
     {
         let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
-            label: Some("Render Pass"),
+            label: Some("render-pass"),
             color_attachments: &[RenderPassColorAttachment {
                 view: &frame.view,
                 resolve_target: None,

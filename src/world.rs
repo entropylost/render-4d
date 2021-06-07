@@ -101,7 +101,7 @@ pub fn init_world_3d(mut commands: Commands, size: Res<WorldSize>, device: Res<D
         depth_or_array_layers: size,
     };
     let texture = device.create_texture(&TextureDescriptor {
-        label: None,
+        label: Some("world-3d-texture"),
         size: extent,
         mip_level_count: 1,
         sample_count: 1,
@@ -118,7 +118,7 @@ pub fn init_world_3d(mut commands: Commands, size: Res<WorldSize>, device: Res<D
     });
 
     let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-        label: None,
+        label: Some("world-3d-bind-group-layout"),
         entries: &[
             BindGroupLayoutEntry {
                 binding: 0,
@@ -143,7 +143,7 @@ pub fn init_world_3d(mut commands: Commands, size: Res<WorldSize>, device: Res<D
     });
 
     let bind_group = device.create_bind_group(&BindGroupDescriptor {
-        label: None,
+        label: Some("world-3d-bind-group"),
         layout: &bind_group_layout,
         entries: &[
             wgpu::BindGroupEntry {
