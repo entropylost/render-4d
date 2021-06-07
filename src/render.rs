@@ -1,13 +1,75 @@
+use crate::uniform::UniformBindGroup;
+use crate::world::World3dBindGroup;
 use crate::VertexBuffer;
 use bevy::prelude::*;
+use byte_slice_cast::AsSliceOf;
+use std::borrow::Cow;
 use wgpu::*;
 
-pub(crate) fn render(
+pub fn init_render_pipeline(
+    mut commands: Commands,
+    device: Res<Device>,
+    sc_desc: Res<SwapChainDescriptor>,
+    uniform_bind_group: Res<UniformBindGroup>,
+    world_3d_bind_group: Res<World3dBindGroup>,
+) {
+    let shader_vert = device.create_shader_module(&ShaderModuleDescriptor {
+        label: None,
+        source: ShaderSource::SpirV(Cow::Borrowed(
+            include_bytes!("shader.vert.spv")
+                .as_slice_of::<u32>()
+                .unwrap(),
+        )),
+        flags: ShaderFlags::all(),
+    });
+    let shader_frag = device.create_shader_module(&ShaderModuleDescriptor {
+        label: None,
+        source: ShaderSource::SpirV(Cow::Borrowed(
+            include_bytes!("shader.frag.spv")
+                .as_slice_of::<u32>()
+                .unwrap(),
+        )),
+        flags: ShaderFlags::all(),
+    });
+
+    let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
+        label: None,
+        bind_group_layouts: &[&uniform_bind_group.1, &world_3d_bind_group.1],
+        push_constant_ranges: &[],
+    });
+
+    let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
+        label: None,
+        layout: Some(&pipeline_layout),
+        vertex: VertexState {
+            module: &shader_vert,
+            entry_point: "main",
+            buffers: &[VertexBufferLayout {
+                array_stride: std::mem::size_of::<[f32; 3]>() as BufferAddress,
+                step_mode: InputStepMode::Vertex,
+                attributes: &vertex_attr_array![0 => Float32x3],
+            }],
+        },
+        fragment: Some(FragmentState {
+            module: &shader_frag,
+            entry_point: "main",
+            targets: &[sc_desc.format.into()],
+        }),
+        depth_stencil: None,
+        primitive: Default::default(),
+        multisample: Default::default(),
+    });
+
+    commands.insert_resource(pipeline);
+}
+
+pub fn render(
     device: Res<Device>,
     queue: Res<Queue>,
     swap_chain: Res<SwapChain>,
     render_pipeline: Res<RenderPipeline>,
-    bind_group: Res<BindGroup>,
+    uniform_bind_group: Res<UniformBindGroup>,
+    world_3d_bind_group: Res<World3dBindGroup>,
     vertex_buffer: Res<VertexBuffer>,
 ) {
     let vertex_buffer = &vertex_buffer.0;
@@ -35,7 +97,8 @@ pub(crate) fn render(
             depth_stencil_attachment: None,
         });
         render_pass.set_pipeline(&render_pipeline);
-        render_pass.set_bind_group(0, &bind_group, &[]);
+        render_pass.set_bind_group(0, &uniform_bind_group.0, &[]);
+        render_pass.set_bind_group(1, &world_3d_bind_group.0, &[]);
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.draw(0..6, 0..1);
     }

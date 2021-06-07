@@ -1,11 +1,9 @@
-use crate::voxel::World3dTexture;
-use crate::voxel::WorldSize;
 use crate::VertexBuffer;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
-use byte_slice_cast::{AsByteSlice, AsSliceOf};
+use byte_slice_cast::AsByteSlice;
 use futures::executor::block_on;
-use std::borrow::Cow;
+
 use wgpu::util::DeviceExt;
 use wgpu::*;
 
@@ -23,9 +21,7 @@ pub(crate) fn setup(
     mut commands: Commands,
     winit_windows: Res<WinitWindows>,
     windows: Res<Windows>,
-    world_size: Res<WorldSize>,
 ) {
-    let world_size = world_size.0;
     let window = winit_windows
         .get_window(windows.get_primary().unwrap().id())
         .unwrap();
@@ -64,120 +60,9 @@ pub(crate) fn setup(
         usage: BufferUsage::VERTEX,
     });
 
-    let shader_vert = device.create_shader_module(&ShaderModuleDescriptor {
-        label: None,
-        source: ShaderSource::SpirV(Cow::Borrowed(
-            include_bytes!("shader.vert.spv")
-                .as_slice_of::<u32>()
-                .unwrap(),
-        )),
-        flags: ShaderFlags::all(),
-    });
-    let shader_frag = device.create_shader_module(&ShaderModuleDescriptor {
-        label: None,
-        source: ShaderSource::SpirV(Cow::Borrowed(
-            include_bytes!("shader.frag.spv")
-                .as_slice_of::<u32>()
-                .unwrap(),
-        )),
-        flags: ShaderFlags::all(),
-    });
-
-    let world_3d_size = Extent3d {
-        width: world_size,
-        height: world_size,
-        depth_or_array_layers: world_size,
-    };
-    let world_3d = device.create_texture(&TextureDescriptor {
-        label: None,
-        size: world_3d_size,
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: TextureDimension::D3,
-        format: TextureFormat::R8Uint,
-        usage: TextureUsage::COPY_DST | TextureUsage::SAMPLED | TextureUsage::RENDER_ATTACHMENT,
-    });
-    let world_3d_view = world_3d.create_view(&TextureViewDescriptor::default());
-    let world_3d_sampler = device.create_sampler(&SamplerDescriptor {
-        mag_filter: FilterMode::Nearest,
-        min_filter: FilterMode::Nearest,
-        mipmap_filter: FilterMode::Nearest,
-        ..Default::default()
-    });
-
-    let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-        label: None,
-        entries: &[
-            BindGroupLayoutEntry {
-                binding: 0,
-                visibility: ShaderStage::FRAGMENT,
-                ty: BindingType::Texture {
-                    multisampled: false,
-                    view_dimension: TextureViewDimension::D3,
-                    sample_type: TextureSampleType::Uint,
-                },
-                count: None,
-            },
-            BindGroupLayoutEntry {
-                binding: 1,
-                visibility: ShaderStage::FRAGMENT,
-                ty: BindingType::Sampler {
-                    comparison: false,
-                    filtering: false,
-                },
-                count: None,
-            },
-        ],
-    });
-
-    let bind_group = device.create_bind_group(&BindGroupDescriptor {
-        label: None,
-        layout: &bind_group_layout,
-        entries: &[
-            wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::TextureView(&world_3d_view),
-            },
-            wgpu::BindGroupEntry {
-                binding: 1,
-                resource: wgpu::BindingResource::Sampler(&world_3d_sampler),
-            },
-        ],
-    });
-
-    let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
-        label: None,
-        bind_group_layouts: &[&bind_group_layout],
-        push_constant_ranges: &[],
-    });
-
-    let render_pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
-        label: None,
-        layout: Some(&pipeline_layout),
-        vertex: VertexState {
-            module: &shader_vert,
-            entry_point: "main",
-            buffers: &[VertexBufferLayout {
-                array_stride: std::mem::size_of::<[f32; 3]>() as BufferAddress,
-                step_mode: InputStepMode::Vertex,
-                attributes: &vertex_attr_array![0 => Float32x3],
-            }],
-        },
-        fragment: Some(FragmentState {
-            module: &shader_frag,
-            entry_point: "main",
-            targets: &[sc_desc.format.into()],
-        }),
-        depth_stencil: None,
-        primitive: Default::default(),
-        multisample: Default::default(),
-    });
-
     commands.insert_resource(device);
     commands.insert_resource(queue);
+    commands.insert_resource(sc_desc);
     commands.insert_resource(swap_chain);
-    commands.insert_resource(render_pipeline);
     commands.insert_resource(VertexBuffer(vertex_buffer));
-    commands.insert_resource(World3dTexture(world_3d, world_3d_size));
-    commands.insert_resource(bind_group);
 }
