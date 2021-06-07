@@ -4,6 +4,7 @@
 use crate::render::init_render_pipeline;
 use crate::render::render;
 use crate::setup::setup;
+use crate::setup::update_on_resize;
 use crate::uniform::init_uniforms;
 use crate::uniform::update_uniform_buffer;
 use crate::voxel::VoxelType;
@@ -60,6 +61,12 @@ fn main() {
         .add_startup_system_to_stage("startup-bind-groups", init_world_3d.system())
         .add_startup_system_to_stage("startup-pipeline", init_render_pipeline.system())
         .add_startup_system_to_stage("startup-finish", init_world_data.system())
+        .add_system(
+            update_on_resize
+                .system()
+                .before("render")
+                .before("update-uniforms"),
+        )
         .add_system(
             update_world_texture
                 .system()
