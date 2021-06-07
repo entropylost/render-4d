@@ -1,7 +1,7 @@
 use crate::VertexBuffer;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
-use byte_slice_cast::AsByteSlice;
+use bytemuck::cast_slice;
 use futures::executor::block_on;
 
 use wgpu::util::DeviceExt;
@@ -56,7 +56,7 @@ pub(crate) fn setup(
 
     let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("Vertex Buffer"),
-        contents: VERTICIES.as_byte_slice(),
+        contents: cast_slice(VERTICIES),
         usage: BufferUsage::VERTEX,
     });
 

@@ -512,12 +512,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9c59e7af012c713f529e7a3ee57ce9b31ddd858d4b512923602f74608b009631"
 
 [[package]]
-name = "byte-slice-cast"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65c1bf4a04a88c54f589125563643d773f3254b5c38571395e2b591c693bbc81"
-
-[[package]]
 name = "bytemuck"
 version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2300,8 +2294,8 @@ dependencies = [
  "anyhow",
  "arrayvec 0.7.1",
  "bevy",
- "byte-slice-cast",
  "bytemuck",
+ "byteorder",
  "derive-new",
  "fs_extra",
  "futures",

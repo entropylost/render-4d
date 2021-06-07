@@ -7,7 +7,7 @@ use wgpu::*;
 #[repr(C)]
 #[derive(Pod, Zeroable, Clone, Copy, Debug)]
 pub struct Uniforms {
-    pub camera_matrix: Matrix4<f32>,
+    pub projection_matrix: Matrix4<f32>,
     pub voxel_types: [VoxelTypeInternal; 256],
 }
 
@@ -44,7 +44,7 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>) {
     });
     commands.insert_resource(Uniforms {
         // TODO: CHANGE
-        camera_matrix: Default::default(),
+        projection_matrix: Default::default(),
         voxel_types: [Default::default(); 256],
     });
     commands.insert_resource(UniformBuffer(buffer));

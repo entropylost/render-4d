@@ -2,9 +2,16 @@ use crate::uniform::UniformBindGroup;
 use crate::world::World3dBindGroup;
 use crate::VertexBuffer;
 use bevy::prelude::*;
-use byte_slice_cast::AsSliceOf;
+use byteorder::LittleEndian;
+use byteorder::ByteOrder;
 use std::borrow::Cow;
 use wgpu::*;
+
+fn to_u32_array(x: &[u8]) -> Vec<u32> {
+    let mut out = vec![0; x.len() / 4];
+    LittleEndian::read_u32_into(x, &mut out);
+    out
+}
 
 pub fn init_render_pipeline(
     mut commands: Commands,
@@ -15,21 +22,17 @@ pub fn init_render_pipeline(
 ) {
     let shader_vert = device.create_shader_module(&ShaderModuleDescriptor {
         label: None,
-        source: ShaderSource::SpirV(Cow::Borrowed(
-            include_bytes!("shader.vert.spv")
-                .as_slice_of::<u32>()
-                .unwrap(),
-        )),
-        flags: ShaderFlags::all(),
+        source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
+            "shader.vert.spv"
+        )))),
+        flags: ShaderFlags::VALIDATION,
     });
     let shader_frag = device.create_shader_module(&ShaderModuleDescriptor {
         label: None,
-        source: ShaderSource::SpirV(Cow::Borrowed(
-            include_bytes!("shader.frag.spv")
-                .as_slice_of::<u32>()
-                .unwrap(),
-        )),
-        flags: ShaderFlags::all(),
+        source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
+            "shader.frag.spv"
+        )))),
+        flags: ShaderFlags::VALIDATION,
     });
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
