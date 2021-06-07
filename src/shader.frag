@@ -30,6 +30,7 @@ Ray generate_ray() {
     // Also adding 0.5 here, because we want it to stay in the middle of the pixel
     vec2 pixel_ndc = (gl_FragCoord.xy) / u_camera.screen_size;
     vec2 pixel_camera = 2 * pixel_ndc - 1;
+    pixel_camera.y *= -1;
     pixel_camera.x *= u_camera.aspect_ratio;
     pixel_camera *= u_camera.tan_half_fov;
 
@@ -48,6 +49,8 @@ bool contains_voxel(ivec3 location) {
     return texelFetch(usampler3D(t_world_3d, s_world_3d), location, 0).x != 0;
 }
 
+
+// https://www.shadertoy.com/view/4dX3zl
 void main() {
 
     Ray ray = generate_ray();
@@ -62,7 +65,7 @@ void main() {
 
     bvec3 mask;
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 15; i++) {
         if (contains_voxel(map_pos)) break;
         //Thanks kzy for the suggestion!
         mask = lessThanEqual(side_dist.xyz, min(side_dist.yzx, side_dist.zxy));
@@ -81,7 +84,18 @@ void main() {
 
     VoxelType voxel = get_voxel(map_pos);
 
-    frag_color = voxel.color;
+    float shadow;
+    if (mask.x) {
+        shadow = 0.5;
+    }
+    if (mask.y) {
+        shadow = 1.0;
+    }
+    if (mask.z) {
+        shadow = 0.75;
+    }
+
+    frag_color = vec4(voxel.color.xyz * shadow, voxel.color.w);
     if (! contains_voxel(map_pos)) {
         frag_color = vec4(0.0, 0.0, 0.0, 1.0);
     }

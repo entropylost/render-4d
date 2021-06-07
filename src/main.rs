@@ -81,7 +81,7 @@ fn init_world_data(mut world: ResMut<World3d>) {
 
     for i in 0..2 {
         for j in 0..2 {
-            for k in 3..5 {
+            for k in 0..2 {
                 world[Vector3::new(i, j, k)] = normal_type;
             }
         }
