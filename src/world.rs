@@ -15,21 +15,21 @@ use wgpu::*;
 pub struct WorldSize(pub u32);
 
 #[derive(Debug, Clone)]
-pub struct World3d {
+pub struct World {
     voxels: Array3<VoxelId>,
     types: ArrayVec<VoxelType, 256>,
     types_internal: ArrayVec<VoxelTypeInternal, 256>,
 }
 
-impl World3d {
-    pub fn new(size: u32) -> World3d {
+impl World {
+    pub fn new(size: u32) -> World {
         let size = size as usize;
 
         let mut types = ArrayVec::new();
         let mut types_internal = ArrayVec::new();
         types.push(VoxelType::default());
         types_internal.push(types[0].to_internal());
-        World3d {
+        World {
             voxels: Array3::from_elem((size, size, size), VoxelId(0)),
             types,
             types_internal,
@@ -71,14 +71,14 @@ impl World3d {
     }
 }
 
-impl Index<Vector3<u32>> for World3d {
+impl Index<Vector3<u32>> for World {
     type Output = VoxelId;
     fn index(&self, index: Vector3<u32>) -> &Self::Output {
         let index = index.cast::<usize>();
         &self.voxels[[index.x, index.y, index.z]]
     }
 }
-impl IndexMut<Vector3<u32>> for World3d {
+impl IndexMut<Vector3<u32>> for World {
     fn index_mut(&mut self, index: Vector3<u32>) -> &mut Self::Output {
         let index = index.cast::<usize>();
         &mut self.voxels[[index.x, index.y, index.z]]
@@ -93,7 +93,7 @@ pub struct World3dBindGroup(pub BindGroup, pub BindGroupLayout);
 pub fn init_world_3d(mut commands: Commands, size: Res<WorldSize>, device: Res<Device>) {
     let size = size.0;
 
-    let world_3d = World3d::new(size);
+    let world_3d = World::new(size);
 
     let extent = Extent3d {
         width: size,
@@ -162,8 +162,8 @@ pub fn init_world_3d(mut commands: Commands, size: Res<WorldSize>, device: Res<D
     commands.insert_resource(World3dBindGroup(bind_group, bind_group_layout));
 }
 
-pub fn update_world_texture(
-    world: Res<World3d>,
+pub fn update_world_3d(
+    world: Res<World>,
     queue: Res<Queue>,
     texture: Res<World3dTexture>,
     mut uniforms: ResMut<Uniforms>,

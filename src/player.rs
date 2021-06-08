@@ -20,7 +20,7 @@ impl Player {
             .matrix()
     }
 
-    pub fn to_internal(&self, screen_size: Vector2<f32>) -> CameraInternal {
+    pub fn to_internal(&self, window_size: Vector2<f32>) -> CameraInternal {
         let r = self.rotation_matrix();
         #[rustfmt::skip]
         let rotation = Matrix4x3::new(
@@ -33,8 +33,8 @@ impl Player {
             position: self.position,
             _padding: 0.0,
             rotation,
-            screen_size,
-            aspect_ratio: screen_size.x / screen_size.y,
+            window_size,
+            aspect_ratio: window_size.x / window_size.y,
             tan_half_fov: (self.fov / 2.0).tan(),
         }
     }
@@ -46,7 +46,7 @@ pub struct CameraInternal {
     position: Vector3<f32>,
     _padding: f32,
     rotation: Matrix4x3<f32>,
-    screen_size: Vector2<f32>,
+    window_size: Vector2<f32>,
     aspect_ratio: f32,
     tan_half_fov: f32,
 }

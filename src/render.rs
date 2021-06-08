@@ -1,17 +1,30 @@
+use bytemuck::cast_slice;
 use crate::uniform::UniformBindGroup;
+use wgpu::util::DeviceExt;
 use crate::world::World3dBindGroup;
-use crate::VertexBuffer;
 use bevy::prelude::*;
 use byteorder::ByteOrder;
 use byteorder::LittleEndian;
 use std::borrow::Cow;
 use wgpu::*;
 
+#[rustfmt::skip]
+const VERTICIES: &[f32] = &[
+    -1.0, -1.0, 0.0,
+    -1.0, 1.0,  0.0,
+    1.0,  -1.0, 0.0,
+    1.0,  1.0,  0.0,
+    1.0, -1.0,  0.0,
+    -1.0, 1.0,  0.0,
+];
+
 fn to_u32_array(x: &[u8]) -> Vec<u32> {
     let mut out = vec![0; x.len() / 4];
     LittleEndian::read_u32_into(x, &mut out);
     out
 }
+
+pub struct VertexBuffer(Buffer);
 
 pub fn init_render_pipeline(
     mut commands: Commands,
@@ -33,6 +46,12 @@ pub fn init_render_pipeline(
             "shader.frag.spv"
         )))),
         flags: ShaderFlags::VALIDATION,
+    });
+
+    let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+        label: Some("vertex-buffer"),
+        contents: cast_slice(VERTICIES),
+        usage: BufferUsage::VERTEX,
     });
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
@@ -64,6 +83,7 @@ pub fn init_render_pipeline(
     });
 
     commands.insert_resource(pipeline);
+    commands.insert_resource(VertexBuffer(vertex_buffer));
 }
 
 pub fn render(

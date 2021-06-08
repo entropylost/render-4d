@@ -1,9 +1,9 @@
+use crate::window_size::WindowSize;
 use crate::player::CameraInternal;
 use crate::player::Player;
 use crate::voxel::VoxelTypeInternal;
 use bevy::prelude::*;
 use bytemuck::*;
-use nalgebra::Vector2;
 use nalgebra::Vector3;
 use wgpu::*;
 
@@ -17,8 +17,7 @@ pub struct Uniforms {
 pub struct UniformBuffer(pub Buffer);
 pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
-pub fn init_uniforms(mut commands: Commands, device: Res<Device>, windows: Res<Windows>) {
-    let window = windows.get_primary().unwrap();
+pub fn init_uniforms(mut commands: Commands, device: Res<Device>, window_size: Res<WindowSize>) {
     let buffer = device.create_buffer(&BufferDescriptor {
         label: Some("uniform-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
@@ -52,7 +51,7 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>, windows: Res<W
             Vector3::new(-1.0, -1.0, -1.0),
             1.8,
         )
-        .to_internal(Vector2::new(window.width(), window.height())),
+        .to_internal(window_size.0.cast()),
         voxel_types: [Default::default(); 256],
     });
     commands.insert_resource(UniformBuffer(buffer));

@@ -7,7 +7,7 @@ struct VoxelType {
 struct Camera {
     vec3 position;
     mat3 rotation;
-    vec2 screen_size;
+    vec2 window_size;
     float aspect_ratio;
     float tan_half_fov;
 };
@@ -27,10 +27,9 @@ layout (set = 1, binding = 0) uniform utexture3D t_world_3d;
 layout (set = 1, binding = 1) uniform sampler s_world_3d;
 
 Ray generate_ray() {
-    vec2 pixel_ndc = (gl_FragCoord.xy) / u_camera.screen_size;
+    vec2 pixel_ndc = (gl_FragCoord.xy) / u_camera.window_size;
     vec2 pixel_camera = 2 * pixel_ndc - 1;
-    pixel_camera.y *= -1;
-    pixel_camera.x *= u_camera.aspect_ratio;
+    pixel_camera *= vec2(u_camera.aspect_ratio, -1);
     pixel_camera *= u_camera.tan_half_fov;
 
     vec3 unnorm_dir = u_camera.rotation * vec3(pixel_camera, -1);
