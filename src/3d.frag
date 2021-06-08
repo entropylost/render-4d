@@ -1,7 +1,7 @@
 #version 460
 
 struct VoxelType {
-    vec4 color;
+    vec3 color;
 };
 
 struct Camera {
@@ -56,7 +56,7 @@ void main() {
     ivec3 map_pos = ivec3(floor(ray.origin));
 
     // The amount you need to go along the ray to increment the voxel by one.
-    vec3 delta_dist = abs(vec3(1.0) / ray.direction);
+    vec3 delta_dist = abs(vec3(1) / ray.direction);
 
     // The direction of the ray as a sign.
     ivec3 ray_step = ivec3(sign(ray.direction));
@@ -90,5 +90,5 @@ void main() {
         shadow = 0.75;
     }
 
-    frag_color = contains_voxel(map_pos) ? vec4(voxel.color.xyz * shadow, voxel.color.w) : vec4(0.0, 0.0, 0.0, 1.0);
+    frag_color = vec4(contains_voxel(map_pos) ? shadow * voxel.color : vec3(0), 1);
 }

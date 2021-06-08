@@ -17,7 +17,7 @@ use crate::world::WorldSize;
 use bevy::diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use nalgebra::Vector3;
-use palette::Srgba;
+use palette::Srgb;
 
 mod player;
 mod render;
@@ -93,7 +93,7 @@ fn main() {
 }
 
 fn init_world_data(mut world: ResMut<World>) {
-    let normal_type = world.insert_type(VoxelType::new(Srgba::new(0.212, 0.247, 0.278, 1.0)));
+    let normal_type = world.insert_type(VoxelType::new(Srgb::new(0.212, 0.247, 0.278)));
 
     for i in 0..2 {
         for j in 0..2 {

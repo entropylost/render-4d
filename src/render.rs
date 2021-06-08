@@ -38,15 +38,20 @@ pub fn init_render_pipeline(
         source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
             "3d.vert.spv"
         )))),
-        flags: ShaderFlags::VALIDATION,
+        flags: ShaderFlags::all(),
     });
     let frag_3d = device.create_shader_module(&ShaderModuleDescriptor {
         label: Some("fragment-3d"),
         source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
             "3d.frag.spv"
         )))),
-        flags: ShaderFlags::VALIDATION,
+        flags: ShaderFlags::all(),
     });
+    /* let comp_4d = device.create_shader_module(&ShaderModuleDescriptor {
+        label: Some("comp-4d"),
+        source: ShaderSource::SpirV(Cow::from(&to_u32_array(include_bytes!("4d.comp.spv")))),
+        flags: ShaderFlags::all(),
+    }); */
 
     let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("vertex-buffer"),

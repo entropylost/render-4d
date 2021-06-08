@@ -1,18 +1,19 @@
 use bytemuck::Pod;
 use bytemuck::Zeroable;
 use derive_new::new;
-use palette::LinSrgba;
-use palette::Srgba;
+use palette::LinSrgb;
+use palette::Srgb;
 
 #[derive(new, Copy, Clone, Debug, PartialEq, Default)]
 pub struct VoxelType {
-    pub color: Srgba,
+    pub color: Srgb,
 }
 
 impl VoxelType {
     pub fn to_internal(self) -> VoxelTypeInternal {
         VoxelTypeInternal {
             color: self.color.into_linear(),
+            _padding: 0.0,
         }
     }
 }
@@ -20,13 +21,15 @@ impl VoxelType {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct VoxelTypeInternal {
-    color: LinSrgba,
+    color: LinSrgb,
+    _padding: f32,
 }
 
 impl Default for VoxelTypeInternal {
     fn default() -> Self {
         VoxelTypeInternal {
-            color: LinSrgba::new(0.0, 0.0, 0.0, 0.0),
+            color: LinSrgb::new(0.0, 0.0, 0.0),
+            _padding: 0.0,
         }
     }
 }
