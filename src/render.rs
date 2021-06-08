@@ -33,17 +33,17 @@ pub fn init_render_pipeline(
     uniform_bind_group: Res<UniformBindGroup>,
     world_3d_bind_group: Res<World3dBindGroup>,
 ) {
-    let shader_vert = device.create_shader_module(&ShaderModuleDescriptor {
-        label: Some("vertex-shader"),
+    let vert_3d = device.create_shader_module(&ShaderModuleDescriptor {
+        label: Some("vertex-3d"),
         source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
-            "shader.vert.spv"
+            "3d.vert.spv"
         )))),
         flags: ShaderFlags::VALIDATION,
     });
-    let shader_frag = device.create_shader_module(&ShaderModuleDescriptor {
-        label: Some("fragment-shader"),
+    let frag_3d = device.create_shader_module(&ShaderModuleDescriptor {
+        label: Some("fragment-3d"),
         source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
-            "shader.frag.spv"
+            "3d.frag.spv"
         )))),
         flags: ShaderFlags::VALIDATION,
     });
@@ -64,7 +64,7 @@ pub fn init_render_pipeline(
         label: Some("render-pipeline"),
         layout: Some(&pipeline_layout),
         vertex: VertexState {
-            module: &shader_vert,
+            module: &vert_3d,
             entry_point: "main",
             buffers: &[VertexBufferLayout {
                 array_stride: std::mem::size_of::<[f32; 3]>() as BufferAddress,
@@ -73,7 +73,7 @@ pub fn init_render_pipeline(
             }],
         },
         fragment: Some(FragmentState {
-            module: &shader_frag,
+            module: &frag_3d,
             entry_point: "main",
             targets: &[sc_desc.format.into()],
         }),

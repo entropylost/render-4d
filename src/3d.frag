@@ -50,31 +50,28 @@ bool contains_voxel(ivec3 location) {
 
 // https://www.shadertoy.com/view/4dX3zl
 void main() {
-
     Ray ray = generate_ray();
 
-    ivec3 map_pos = ivec3(floor(ray.origin + 0.));
+    // Position of the voxel the ray is currently in (integer)
+    ivec3 map_pos = ivec3(floor(ray.origin));
 
-    vec3 delta_dist = abs(vec3(length(ray.direction)) / ray.direction);
+    // The amount you need to go along the ray to increment the voxel by one.
+    vec3 delta_dist = abs(vec3(1.0) / ray.direction);
 
+    // The direction of the ray as a sign.
     ivec3 ray_step = ivec3(sign(ray.direction));
 
-    vec3 side_dist = (sign(ray.direction) * (vec3(map_pos) - ray.origin) + (sign(ray.direction) * 0.5) + 0.5) * delta_dist;
+    // sign(ray.direction) * 0.5 + 0.5: 0 if the direction is negative, 1 if its positive, per coord.
+    // vec3(map_pos) - ray.origin: Fractional part of the ray origin.
+    // The distance to the next voxel along all 3 directions.
+    vec3 side_dist = (sign(ray.direction) * (vec3(map_pos) - ray.origin) + sign(ray.direction) * 0.5 + 0.5) * delta_dist;
 
     bvec3 mask;
 
     for (int i = 0; i < 15; i++) {
         if (contains_voxel(map_pos)) break;
-        //Thanks kzy for the suggestion!
+
         mask = lessThanEqual(side_dist.xyz, min(side_dist.yzx, side_dist.zxy));
-        /*bvec3 b1 = lessThan(sideDist.xyz, sideDist.yzx);
-        bvec3 b2 = lessThanEqual(sideDist.xyz, sideDist.zxy);
-        mask.x = b1.x && b2.x;
-        mask.y = b1.y && b2.y;
-        mask.z = b1.z && b2.z;*/
-        //Would've done mask = b1 && b2 but the compiler is making me do it component wise.
-        //All components of mask are false except for the corresponding largest component
-        //of sideDist, which is the axis along which the ray should be incremented.
 
         side_dist += vec3(mask) * delta_dist;
         map_pos += ivec3(vec3(mask)) * ray_step;
@@ -93,8 +90,5 @@ void main() {
         shadow = 0.75;
     }
 
-    frag_color = vec4(voxel.color.xyz * shadow, voxel.color.w);
-    if (! contains_voxel(map_pos)) {
-        frag_color = vec4(0.0, 0.0, 0.0, 1.0);
-    }
+    frag_color = contains_voxel(map_pos) ? vec4(voxel.color.xyz * shadow, voxel.color.w) : vec4(0.0, 0.0, 0.0, 1.0);
 }

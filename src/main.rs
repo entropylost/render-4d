@@ -31,8 +31,8 @@ fn main() {
     let mut app = App::build();
     app.insert_resource(WindowDescriptor {
         title: "render-4d".to_string(),
-        width: 700.0,
-        height: 700.0,
+        width: 500.0,
+        height: 500.0,
         vsync: true,
         ..Default::default()
     })
