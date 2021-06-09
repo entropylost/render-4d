@@ -38,7 +38,7 @@ impl Camera3d {
             y: (pitch_range.start() + pitch_range.end()) / 2.0,
             pitch_range,
             position,
-            fov: 1.8,
+            fov: 1.0,
             sensitivity: 1.0,
             speed: 5.0,
             active: false,
