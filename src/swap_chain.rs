@@ -4,7 +4,12 @@ use bevy::winit::WinitWindows;
 use futures::executor::block_on;
 use wgpu::*;
 
-pub fn init_swap_chain(mut commands: Commands, winit_windows: Res<WinitWindows>, windows: Res<Windows>, window_size: Res<WindowSize>) {
+pub fn init_swap_chain(
+    mut commands: Commands,
+    winit_windows: Res<WinitWindows>,
+    windows: Res<Windows>,
+    window_size: Res<WindowSize>,
+) {
     let window = winit_windows
         .get_window(windows.get_primary().unwrap().id())
         .unwrap();

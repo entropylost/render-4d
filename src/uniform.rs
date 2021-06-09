@@ -1,23 +1,27 @@
-use crate::window_size::WindowSize;
-use crate::player::CameraInternal;
-use crate::player::Player;
+use crate::camera3d::Camera3d;
+use crate::camera3d::Camera3dInternal;
 use crate::voxel::VoxelTypeInternal;
+use crate::window_size::WindowSize;
 use bevy::prelude::*;
 use bytemuck::*;
-use nalgebra::Vector3;
 use wgpu::*;
 
 #[repr(C)]
 #[derive(Pod, Zeroable, Clone, Copy, Debug)]
 pub struct Uniforms {
-    pub camera: CameraInternal,
+    pub camera: Camera3dInternal,
     pub voxel_types: [VoxelTypeInternal; 256],
 }
 
 pub struct UniformBuffer(pub Buffer);
 pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
-pub fn init_uniforms(mut commands: Commands, device: Res<Device>, window_size: Res<WindowSize>) {
+pub fn init_uniforms(
+    mut commands: Commands,
+    camera: Res<Camera3d>,
+    device: Res<Device>,
+    window_size: Res<WindowSize>,
+) {
     let buffer = device.create_buffer(&BufferDescriptor {
         label: Some("uniform-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
@@ -46,12 +50,7 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>, window_size: R
         }],
     });
     commands.insert_resource(Uniforms {
-        camera: Player::new(
-            Vector3::new(4.0, 4.0, 4.0),
-            Vector3::new(-1.0, -1.0, -1.0),
-            1.8,
-        )
-        .to_internal(window_size.0.cast()),
+        camera: camera.to_internal(window_size.0.cast()),
         voxel_types: [Default::default(); 256],
     });
     commands.insert_resource(UniformBuffer(buffer));

@@ -1,11 +1,11 @@
-use bytemuck::cast_slice;
 use crate::uniform::UniformBindGroup;
-use wgpu::util::DeviceExt;
 use crate::world::World3dBindGroup;
 use bevy::prelude::*;
+use bytemuck::cast_slice;
 use byteorder::ByteOrder;
 use byteorder::LittleEndian;
 use std::borrow::Cow;
+use wgpu::util::DeviceExt;
 use wgpu::*;
 
 #[rustfmt::skip]
@@ -35,16 +35,12 @@ pub fn init_render_pipeline(
 ) {
     let vert_3d = device.create_shader_module(&ShaderModuleDescriptor {
         label: Some("vertex-3d"),
-        source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
-            "3d.vert.spv"
-        )))),
+        source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!("3d.vert.spv")))),
         flags: ShaderFlags::all(),
     });
     let frag_3d = device.create_shader_module(&ShaderModuleDescriptor {
         label: Some("fragment-3d"),
-        source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!(
-            "3d.frag.spv"
-        )))),
+        source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!("3d.frag.spv")))),
         flags: ShaderFlags::all(),
     });
     /* let comp_4d = device.create_shader_module(&ShaderModuleDescriptor {
