@@ -38,9 +38,9 @@ impl Camera3d {
             y: (pitch_range.start() + pitch_range.end()) / 2.0,
             pitch_range,
             position,
-            fov: 1.8,
+            fov: 1.0,
             sensitivity: 1.0,
-            speed: 1.0,
+            speed: 5.0,
             active: false,
         }
     }
@@ -125,24 +125,28 @@ impl Camera3dPlugin {
         }
     }
     fn move_system(time: Res<Time>, key: Res<Input<KeyCode>>, mut camera: ResMut<Camera3d>) {
+        if !camera.active {
+            return;
+        }
         let mut delta = Vector3::<f32>::zeros();
-        if key.just_pressed(KeyCode::W) {
+
+        if key.pressed(KeyCode::D) {
             delta += Vector3::x();
         }
-        if key.just_pressed(KeyCode::S) {
+        if key.pressed(KeyCode::A) {
             delta -= Vector3::x();
         }
-        if key.just_pressed(KeyCode::D) {
-            delta += Vector3::z();
-        }
-        if key.just_pressed(KeyCode::A) {
-            delta -= Vector3::z();
-        }
-        if key.just_pressed(KeyCode::Space) {
+        if key.pressed(KeyCode::Space) {
             delta += Vector3::y();
         }
-        if key.just_pressed(KeyCode::LShift) {
+        if key.pressed(KeyCode::LShift) {
             delta -= Vector3::y();
+        }
+        if key.pressed(KeyCode::W) {
+            delta -= Vector3::z();
+        }
+        if key.pressed(KeyCode::S) {
+            delta += Vector3::z();
         }
         if delta != Vector3::zeros() {
             delta.normalize_mut();
