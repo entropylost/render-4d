@@ -86,14 +86,21 @@ impl IndexMut<Vector3<u32>> for World {
 }
 
 #[derive(Debug)]
-pub struct World3dTexture(pub Texture, pub Extent3d);
+pub struct ViewTexture(pub Texture, pub Extent3d);
 #[derive(Debug)]
-pub struct World3dBindGroup(pub BindGroup, pub BindGroupLayout);
+pub struct View3dBindGroup(pub BindGroup, pub BindGroupLayout);
+#[derive(Debug)]
+pub struct View4dBindGroup(pub BindGroup, pub BindGroupLayout);
 
-pub fn init_world_3d(mut commands: Commands, size: Res<WorldSize>, device: Res<Device>) {
+#[derive(Debug)]
+pub struct WorldTexture(pub Texture, pub Extent3d);
+#[derive(Debug)]
+pub struct WorldBindGroup(pub BindGroup, pub BindGroupLayout);
+
+pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Device>) {
     let size = size.0;
 
-    let world_3d = World::new(size);
+    let world = World::new(size);
 
     let extent = Extent3d {
         width: size,

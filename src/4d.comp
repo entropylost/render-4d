@@ -15,24 +15,26 @@ struct Ray {
 layout (local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 layout (set = 0, binding = 0) uniform Uniforms {
     Camera u_camera;
-    uint u_world_4d_size;
+    uint u_world_size;
 };
-layout (set = 1, binding = 0) uniform utexture3D t_world_4d;
-layout (set = 1, binding = 1) uniform sampler s_world_4d;
-layout (set = 1, binding = 0) uniform writeonly uimage3D o_world_3d;
+// x, y, z + (w * u_world_size)
+layout (set = 1, binding = 0) uniform utexture3D t_world;
+layout (set = 1, binding = 1) uniform sampler s_world;
+layout (set = 1, binding = 0) uniform writeonly uimage3D o_view;
+layout (set = 1, binding = 1) uniform writeonly uimage3D o_view_depth;
 
 Ray generate_ray() {
     vec3 voxel_3d_norm = (vec3(gl_GlobalInvocationID) + 0.5) - vec3(gl_NumWorkGroups * gl_WorkGroupSize) / 2;
-    vec4 origin_4d = u_camera.origin + u_camera.rotation * vec4(voxel_3d_norm, 0);
+    vec4 origi = u_camera.origin + u_camera.rotation * vec4(voxel_3d_norm, 0);
     Ray ray;
-    ray.origin = origin_4d;
+    ray.origin = origin;
     ray.direction = u_camera.direction;
     return ray;
 }
 
 bool update_ray_intersection(inout Ray ray) {
     vec4 t0 = - ray.origin / ray.direction;
-    vec4 t1 = (vec4(u_world_4d_size) - ray.origin) / ray.direction;
+    vec4 t1 = (vec4(u_world_size) - ray.origin) / ray.direction;
     vec4 t_min_v = min(t0, t1);
     vec4 t_max_v = max(t0, t1);
     float t_min = max(t_min_v.x, max(t_min_v.y, max(t_min_v.z, t_min_v.w)));
