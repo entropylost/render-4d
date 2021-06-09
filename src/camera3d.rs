@@ -126,7 +126,7 @@ impl Camera3dPlugin {
     }
     fn move_system(time: Res<Time>, key: Res<Input<KeyCode>>, mut camera: ResMut<Camera3d>) {
         if !camera.active {
-            continue;
+            return;
         }
         let mut delta = Vector3::<f32>::zeros();
 
