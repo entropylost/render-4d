@@ -1,3 +1,4 @@
+use crate::world::WorldSize;
 use crate::window_size::WindowSize;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
@@ -9,6 +10,7 @@ pub fn init_swap_chain(
     winit_windows: Res<WinitWindows>,
     windows: Res<Windows>,
     window_size: Res<WindowSize>,
+    world_size: Res<WorldSize>,
 ) {
     let window = winit_windows
         .get_window(windows.get_primary().unwrap().id())
@@ -25,7 +27,10 @@ pub fn init_swap_chain(
         &DeviceDescriptor {
             label: Some("device"),
             features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
-            limits: Limits::default(),
+            limits: Limits {
+                max_texture_dimension_3d: world_size.0 * world_size.0,
+                ..Default::default()
+            },
         },
         None,
     ))
