@@ -1,14 +1,14 @@
-use crate::uniform::Uniforms;
+use nalgebra::Vector4;
 use crate::voxel::VoxelId;
 use crate::voxel::VoxelTypeInternal;
 use crate::VoxelType;
 use arrayvec::ArrayVec;
 use bevy::prelude::*;
-use nalgebra::Vector3;
-use ndarray::Array3;
+use ndarray::Array4;
 use std::num::NonZeroU32;
 use std::ops::Index;
 use std::ops::IndexMut;
+use crate::uniform_3d;
 use wgpu::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -16,7 +16,7 @@ pub struct WorldSize(pub u32);
 
 #[derive(Debug, Clone)]
 pub struct World {
-    voxels: Array3<VoxelId>,
+    voxels: Array4<VoxelId>,
     types: ArrayVec<VoxelType, 256>,
     types_internal: ArrayVec<VoxelTypeInternal, 256>,
 }
@@ -30,7 +30,7 @@ impl World {
         types.push(VoxelType::default());
         types_internal.push(types[0].to_internal());
         World {
-            voxels: Array3::from_elem((size, size, size), VoxelId(0)),
+            voxels: Array4::from_elem((size, size, size, size), VoxelId(0)),
             types,
             types_internal,
         }
@@ -56,7 +56,7 @@ impl World {
         ImageDataLayout {
             offset: 0,
             bytes_per_row: NonZeroU32::new(size),
-            rows_per_image: NonZeroU32::new(size),
+            rows_per_image: NonZeroU32::new(size * size),
         }
     }
 
@@ -71,26 +71,19 @@ impl World {
     }
 }
 
-impl Index<Vector3<u32>> for World {
+impl Index<Vector4<u32>> for World {
     type Output = VoxelId;
-    fn index(&self, index: Vector3<u32>) -> &Self::Output {
+    fn index(&self, index: Vector4<u32>) -> &Self::Output {
         let index = index.cast::<usize>();
-        &self.voxels[[index.x, index.y, index.z]]
+        &self.voxels[[index.x, index.y, index.z, index.w]]
     }
 }
-impl IndexMut<Vector3<u32>> for World {
-    fn index_mut(&mut self, index: Vector3<u32>) -> &mut Self::Output {
+impl IndexMut<Vector4<u32>> for World {
+    fn index_mut(&mut self, index: Vector4<u32>) -> &mut Self::Output {
         let index = index.cast::<usize>();
-        &mut self.voxels[[index.x, index.y, index.z]]
+        &mut self.voxels[[index.x, index.y, index.z, index.w]]
     }
 }
-
-#[derive(Debug)]
-pub struct ViewTexture(pub Texture, pub Extent3d);
-#[derive(Debug)]
-pub struct View3dBindGroup(pub BindGroup, pub BindGroupLayout);
-#[derive(Debug)]
-pub struct View4dBindGroup(pub BindGroup, pub BindGroupLayout);
 
 #[derive(Debug)]
 pub struct WorldTexture(pub Texture, pub Extent3d);
@@ -105,16 +98,17 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
     let extent = Extent3d {
         width: size,
         height: size,
-        depth_or_array_layers: size,
+        depth_or_array_layers: size * size,
     };
+
     let texture = device.create_texture(&TextureDescriptor {
-        label: Some("world-3d-texture"),
+        label: Some("world-texture"),
         size: extent,
         mip_level_count: 1,
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsage::COPY_DST | TextureUsage::SAMPLED | TextureUsage::RENDER_ATTACHMENT,
+        usage: TextureUsage::SAMPLED,
     });
     let view = texture.create_view(&TextureViewDescriptor::default());
     let sampler = device.create_sampler(&SamplerDescriptor {
@@ -125,11 +119,11 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
     });
 
     let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-        label: Some("world-3d-bind-group-layout"),
+        label: Some("world-bind-group-layout"),
         entries: &[
             BindGroupLayoutEntry {
                 binding: 0,
-                visibility: ShaderStage::FRAGMENT,
+                visibility: ShaderStage::COMPUTE,
                 ty: BindingType::Texture {
                     multisampled: false,
                     view_dimension: TextureViewDimension::D3,
@@ -139,7 +133,7 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
             },
             BindGroupLayoutEntry {
                 binding: 1,
-                visibility: ShaderStage::FRAGMENT,
+                visibility: ShaderStage::COMPUTE,
                 ty: BindingType::Sampler {
                     comparison: false,
                     filtering: false,
@@ -150,30 +144,30 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
     });
 
     let bind_group = device.create_bind_group(&BindGroupDescriptor {
-        label: Some("world-3d-bind-group"),
+        label: Some("world-bind-group"),
         layout: &bind_group_layout,
         entries: &[
-            wgpu::BindGroupEntry {
+            BindGroupEntry {
                 binding: 0,
-                resource: wgpu::BindingResource::TextureView(&view),
+                resource: BindingResource::TextureView(&view),
             },
-            wgpu::BindGroupEntry {
+            BindGroupEntry {
                 binding: 1,
-                resource: wgpu::BindingResource::Sampler(&sampler),
+                resource: BindingResource::Sampler(&sampler),
             },
         ],
     });
 
-    commands.insert_resource(world_3d);
-    commands.insert_resource(World3dTexture(texture, extent));
-    commands.insert_resource(World3dBindGroup(bind_group, bind_group_layout));
+    commands.insert_resource(world);
+    commands.insert_resource(WorldTexture(texture, extent));
+    commands.insert_resource(WorldBindGroup(bind_group, bind_group_layout));
 }
 
-pub fn update_world_3d(
+pub fn update_world(
     world: Res<World>,
     queue: Res<Queue>,
-    texture: Res<World3dTexture>,
-    mut uniforms: ResMut<Uniforms>,
+    texture: Res<WorldTexture>,
+    mut uniforms: ResMut<uniform_3d::Uniforms>,
 ) {
     if world.is_changed() {
         queue.write_texture(

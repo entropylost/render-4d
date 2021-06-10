@@ -1,4 +1,4 @@
-use crate::uniform::Uniforms;
+use crate::uniform_3d::Uniforms;
 use crate::window_size::WindowSize;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
@@ -13,7 +13,7 @@ use std::f32::consts::PI;
 use std::ops::RangeInclusive;
 
 #[derive(Clone, Debug)]
-pub struct Camera3d {
+pub struct Camera {
     pub x: f32,
     pub y: f32,
     pub pitch_range: RangeInclusive<f32>,
@@ -24,16 +24,16 @@ pub struct Camera3d {
     pub active: bool,
 }
 
-impl Default for Camera3d {
+impl Default for Camera {
     fn default() -> Self {
         Self::new(Vector3::zeros(), 0.0)
     }
 }
 
-impl Camera3d {
-    pub fn new(position: Vector3<f32>, x: f32) -> Camera3d {
+impl Camera {
+    pub fn new(position: Vector3<f32>, x: f32) -> Camera {
         let pitch_range = 0.01..=(PI - 0.01);
-        Camera3d {
+        Camera {
             x,
             y: (pitch_range.start() + pitch_range.end()) / 2.0,
             pitch_range,
@@ -53,7 +53,7 @@ impl Camera3d {
             .matrix()
     }
 
-    pub fn to_internal(&self, window_size: Vector2<f32>) -> Camera3dInternal {
+    pub fn to_internal(&self, window_size: Vector2<f32>) -> CameraInternal {
         let r = self.rotation_matrix();
         #[rustfmt::skip]
         let rotation = Matrix4x3::new(
@@ -62,7 +62,7 @@ impl Camera3d {
             r[(2, 0)], r[(2, 1)], r[(2, 2)],
             0.0, 0.0, 0.0
         );
-        Camera3dInternal {
+        CameraInternal {
             position: self.position,
             _padding: 0.0,
             rotation,
@@ -75,7 +75,7 @@ impl Camera3d {
 
 #[repr(C)]
 #[derive(Pod, Zeroable, Copy, Clone, Debug)]
-pub struct Camera3dInternal {
+pub struct CameraInternal {
     position: Vector3<f32>,
     _padding: f32,
     rotation: Matrix4x3<f32>,
@@ -84,13 +84,13 @@ pub struct Camera3dInternal {
     tan_half_fov: f32,
 }
 
-pub struct Camera3dPlugin;
-impl Camera3dPlugin {
+pub struct CameraPlugin;
+impl CameraPlugin {
     fn cursor_grab_system(
         mut windows: ResMut<Windows>,
         btn: Res<Input<MouseButton>>,
         key: Res<Input<KeyCode>>,
-        mut camera: ResMut<Camera3d>,
+        mut camera: ResMut<Camera>,
     ) {
         let window = windows.get_primary_mut().unwrap();
 
@@ -109,7 +109,7 @@ impl Camera3dPlugin {
     fn rotate_system(
         time: Res<Time>,
         mut reader: EventReader<MouseMotion>,
-        mut camera: ResMut<Camera3d>,
+        mut camera: ResMut<Camera>,
     ) {
         for event in reader.iter() {
             if !camera.active {
@@ -124,7 +124,7 @@ impl Camera3dPlugin {
                 .min(*camera.pitch_range.end());
         }
     }
-    fn move_system(time: Res<Time>, key: Res<Input<KeyCode>>, mut camera: ResMut<Camera3d>) {
+    fn move_system(time: Res<Time>, key: Res<Input<KeyCode>>, mut camera: ResMut<Camera>) {
         if !camera.active {
             return;
         }
@@ -157,7 +157,7 @@ impl Camera3dPlugin {
     }
     fn update_uniform_system(
         window_size: Res<WindowSize>,
-        camera: Res<Camera3d>,
+        camera: Res<Camera>,
         mut uniforms: ResMut<Uniforms>,
     ) {
         if camera.is_changed() {
@@ -165,7 +165,7 @@ impl Camera3dPlugin {
         }
     }
 }
-impl Plugin for Camera3dPlugin {
+impl Plugin for CameraPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_system(Self::cursor_grab_system.system())
             .add_system(Self::rotate_system.system())

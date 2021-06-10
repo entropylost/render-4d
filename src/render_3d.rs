@@ -1,5 +1,5 @@
-use crate::uniform::UniformBindGroup;
-use crate::world::World3dBindGroup;
+use crate::uniform_3d::UniformBindGroup;
+use crate::view::View3dBindGroup;
 use bevy::prelude::*;
 use bytemuck::cast_slice;
 use byteorder::ByteOrder;
@@ -30,8 +30,8 @@ pub fn init_render_pipeline(
     mut commands: Commands,
     device: Res<Device>,
     sc_desc: Res<SwapChainDescriptor>,
-    uniform_bind_group: Res<UniformBindGroup>,
-    world_3d_bind_group: Res<World3dBindGroup>,
+    uniform_3d_bind_group: Res<UniformBindGroup>,
+    view_3d_bind_group: Res<View3dBindGroup>,
 ) {
     let vert_3d = device.create_shader_module(&ShaderModuleDescriptor {
         label: Some("vertex-3d"),
@@ -43,11 +43,6 @@ pub fn init_render_pipeline(
         source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!("3d.frag.spv")))),
         flags: ShaderFlags::all(),
     });
-    /* let comp_4d = device.create_shader_module(&ShaderModuleDescriptor {
-        label: Some("comp-4d"),
-        source: ShaderSource::SpirV(Cow::from(&to_u32_array(include_bytes!("4d.comp.spv")))),
-        flags: ShaderFlags::all(),
-    }); */
 
     let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("vertex-buffer"),
@@ -57,7 +52,7 @@ pub fn init_render_pipeline(
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: Some("render-pipeline-layout"),
-        bind_group_layouts: &[&uniform_bind_group.1, &world_3d_bind_group.1],
+        bind_group_layouts: &[&uniform_3d_bind_group.1, &view_3d_bind_group.1],
         push_constant_ranges: &[],
     });
 
@@ -93,7 +88,7 @@ pub fn render(
     swap_chain: Res<SwapChain>,
     render_pipeline: Res<RenderPipeline>,
     uniform_bind_group: Res<UniformBindGroup>,
-    world_3d_bind_group: Res<World3dBindGroup>,
+    view_3d_bind_group: Res<View3dBindGroup>,
     vertex_buffer: Res<VertexBuffer>,
 ) {
     let vertex_buffer = &vertex_buffer.0;
@@ -122,7 +117,7 @@ pub fn render(
         });
         render_pass.set_pipeline(&render_pipeline);
         render_pass.set_bind_group(0, &uniform_bind_group.0, &[]);
-        render_pass.set_bind_group(1, &world_3d_bind_group.0, &[]);
+        render_pass.set_bind_group(1, &view_3d_bind_group.0, &[]);
         render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
         render_pass.draw(0..6, 0..1);
     }

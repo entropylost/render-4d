@@ -3,8 +3,8 @@
 
 struct Camera {
     vec4 origin;
-    vec4 direction;
-    mat4 rotation; // Rotates +w to this direction.
+    mat4 rotation;
+    uint view_size;
 };
 
 struct Ray {
@@ -20,15 +20,15 @@ layout (set = 0, binding = 0) uniform Uniforms {
 // x, y, z + (w * u_world_size)
 layout (set = 1, binding = 0) uniform utexture3D t_world;
 layout (set = 1, binding = 1) uniform sampler s_world;
-layout (set = 1, binding = 0) uniform writeonly uimage3D o_view;
-layout (set = 1, binding = 1) uniform writeonly uimage3D o_view_depth;
+layout (set = 1, binding = 0, r8ui) uniform writeonly uimage3D o_view;
+layout (set = 1, binding = 1, r8ui) uniform writeonly uimage3D o_view_depth;
 
 Ray generate_ray() {
-    vec3 voxel_3d_norm = (vec3(gl_GlobalInvocationID) + 0.5) - vec3(gl_NumWorkGroups * gl_WorkGroupSize) / 2;
-    vec4 origi = u_camera.origin + u_camera.rotation * vec4(voxel_3d_norm, 0);
+    vec3 voxel_centered = (vec3(gl_GlobalInvocationID) + 0.5) - vec3(gl_NumWorkGroups * gl_WorkGroupSize) / 2;
+    vec4 origin = u_camera.origin + u_camera.rotation * vec4(voxel_centered, 0);
     Ray ray;
     ray.origin = origin;
-    ray.direction = u_camera.direction;
+    ray.direction = u_camera.rotation * vec4(0, 0, 0, 1);
     return ray;
 }
 
@@ -51,5 +51,5 @@ void main() {
     Ray ray = generate_ray();
     uint value = 0;
     // ...
-    imageStore(o_world_3d, ivec3(gl_GlobalInvocationID), uvec4(value, 0, 0, 0));
+    imageStore(o_view, ivec3(gl_GlobalInvocationID), uvec4(value, 0, 0, 0));
 }

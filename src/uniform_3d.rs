@@ -1,5 +1,5 @@
-use crate::camera3d::Camera3d;
-use crate::camera3d::Camera3dInternal;
+use crate::camera_3d::Camera;
+use crate::camera_3d::CameraInternal;
 use crate::voxel::VoxelTypeInternal;
 use crate::window_size::WindowSize;
 use bevy::prelude::*;
@@ -9,7 +9,7 @@ use wgpu::*;
 #[repr(C)]
 #[derive(Pod, Zeroable, Clone, Copy, Debug)]
 pub struct Uniforms {
-    pub camera: Camera3dInternal,
+    pub camera: CameraInternal,
     pub voxel_types: [VoxelTypeInternal; 256],
 }
 
@@ -18,18 +18,18 @@ pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
 pub fn init_uniforms(
     mut commands: Commands,
-    camera: Res<Camera3d>,
+    camera: Res<Camera>,
     device: Res<Device>,
     window_size: Res<WindowSize>,
 ) {
     let buffer = device.create_buffer(&BufferDescriptor {
-        label: Some("uniform-buffer"),
+        label: Some("uniform-3d-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
         usage: BufferUsage::UNIFORM | BufferUsage::COPY_DST,
         mapped_at_creation: false,
     });
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-        label: Some("uniform-bind-group-layout"),
+        label: Some("uniform-3d-bind-group-layout"),
         entries: &[BindGroupLayoutEntry {
             binding: 0,
             visibility: ShaderStage::FRAGMENT,
@@ -42,7 +42,7 @@ pub fn init_uniforms(
         }],
     });
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-        label: Some("uniform-bind-group"),
+        label: Some("uniform-3d-bind-group"),
         layout: &bind_group_layout,
         entries: &[wgpu::BindGroupEntry {
             binding: 0,

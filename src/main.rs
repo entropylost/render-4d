@@ -1,19 +1,15 @@
 #![allow(incomplete_features)]
 #![feature(const_generics)]
 
-use crate::camera3d::Camera3d;
-use crate::camera3d::Camera3dPlugin;
-use crate::render::init_render_pipeline;
-use crate::render::render;
+use nalgebra::Vector4;
+use crate::world::init_world;
+use crate::view::init_view;
 use crate::swap_chain::init_swap_chain;
 use crate::swap_chain::update_swap_chain;
-use crate::uniform::init_uniforms;
-use crate::uniform::update_uniform_buffer;
 use crate::voxel::VoxelType;
 use crate::window_size::init_window_size;
 use crate::window_size::update_window_size;
-use crate::world::init_world_3d;
-use crate::world::update_world_3d;
+use crate::world::update_world;
 use crate::world::World;
 use crate::world::WorldSize;
 use bevy::diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
@@ -21,13 +17,14 @@ use bevy::prelude::*;
 use nalgebra::Vector3;
 use palette::Srgb;
 
-mod camera3d;
-mod render;
+mod camera_3d;
+mod render_3d;
 mod swap_chain;
-mod uniform;
+mod uniform_3d;
 mod voxel;
 mod window_size;
 mod world;
+mod view;
 
 fn main() {
     let mut app = App::build();
@@ -39,12 +36,12 @@ fn main() {
         ..Default::default()
     })
     .insert_resource(WorldSize(5))
-    .insert_resource(Camera3d::new(Vector3::new(4.0, 4.0, 4.0), 0.0));
+    .insert_resource(camera_3d::Camera::new(Vector3::new(4.0, 4.0, 4.0), 0.0));
     app.add_plugins(DefaultPlugins)
         .add_plugin(DiagnosticsPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(Camera3dPlugin);
+        .add_plugin(camera_3d::CameraPlugin);
     app.add_startup_stage_after(
         StartupStage::Startup,
         "startup-swap-chain",
@@ -67,9 +64,10 @@ fn main() {
     );
     app.add_startup_system(init_window_size.system())
         .add_startup_system_to_stage("startup-swap-chain", init_swap_chain.system())
-        .add_startup_system_to_stage("startup-bind-groups", init_uniforms.system())
-        .add_startup_system_to_stage("startup-bind-groups", init_world_3d.system())
-        .add_startup_system_to_stage("startup-pipeline", init_render_pipeline.system())
+        .add_startup_system_to_stage("startup-bind-groups", uniform_3d::init_uniforms.system())
+        .add_startup_system_to_stage("startup-bind-groups", init_world.system())
+        .add_startup_system_to_stage("startup-bind-groups", init_view.system())
+        .add_startup_system_to_stage("startup-pipeline", render_3d::init_render_pipeline.system())
         .add_startup_system_to_stage("startup-finish", init_world_data.system())
         .add_system(update_window_size.system().before("update-swap-chain"))
         .add_system(
@@ -80,18 +78,18 @@ fn main() {
                 .before("update-uniforms"),
         )
         .add_system(
-            update_world_3d
+            update_world
                 .system()
                 .before("render")
                 .before("update-uniforms"),
         )
         .add_system(
-            update_uniform_buffer
+            uniform_3d::update_uniform_buffer
                 .system()
                 .label("update-uniforms")
                 .before("render"),
         )
-        .add_system(render.system().label("render"));
+        .add_system(render_3d::render.system().label("render"));
     app.run();
 }
 
@@ -101,7 +99,9 @@ fn init_world_data(mut world: ResMut<World>) {
     for i in 0..2 {
         for j in 0..2 {
             for k in 0..2 {
-                world[Vector3::new(i, j, k)] = normal_type;
+                for l in 0..2 {
+                    world[Vector4::new(i, j, k, l)] = normal_type;
+                }
             }
         }
     }
