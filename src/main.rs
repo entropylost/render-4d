@@ -1,30 +1,31 @@
 #![allow(incomplete_features)]
 #![feature(const_generics)]
 
-use nalgebra::Vector4;
-use crate::world::init_world;
-use crate::view::init_view;
 use crate::swap_chain::init_swap_chain;
 use crate::swap_chain::update_swap_chain;
+use crate::view::init_view;
+use crate::view::ViewSize;
 use crate::voxel::VoxelType;
 use crate::window_size::init_window_size;
 use crate::window_size::update_window_size;
+use crate::world::init_world;
 use crate::world::update_world;
 use crate::world::World;
 use crate::world::WorldSize;
 use bevy::diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::prelude::*;
 use nalgebra::Vector3;
+use nalgebra::Vector4;
 use palette::Srgb;
 
 mod camera_3d;
 mod render_3d;
 mod swap_chain;
 mod uniform_3d;
+mod view;
 mod voxel;
 mod window_size;
 mod world;
-mod view;
 
 fn main() {
     let mut app = App::build();
@@ -36,6 +37,7 @@ fn main() {
         ..Default::default()
     })
     .insert_resource(WorldSize(5))
+    .insert_resource(ViewSize(5))
     .insert_resource(camera_3d::Camera::new(Vector3::new(4.0, 4.0, 4.0), 0.0));
     app.add_plugins(DefaultPlugins)
         .add_plugin(DiagnosticsPlugin)
@@ -83,6 +85,7 @@ fn main() {
                 .before("render")
                 .before("update-uniforms"),
         )
+        .add_system(view::update_view.system().before("render"))
         .add_system(
             uniform_3d::update_uniform_buffer
                 .system()

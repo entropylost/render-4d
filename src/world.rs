@@ -1,14 +1,14 @@
-use nalgebra::Vector4;
+use crate::uniform_3d;
 use crate::voxel::VoxelId;
 use crate::voxel::VoxelTypeInternal;
 use crate::VoxelType;
 use arrayvec::ArrayVec;
 use bevy::prelude::*;
+use nalgebra::Vector4;
 use ndarray::Array4;
 use std::num::NonZeroU32;
 use std::ops::Index;
 use std::ops::IndexMut;
-use crate::uniform_3d;
 use wgpu::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -56,7 +56,7 @@ impl World {
         ImageDataLayout {
             offset: 0,
             bytes_per_row: NonZeroU32::new(size),
-            rows_per_image: NonZeroU32::new(size * size),
+            rows_per_image: NonZeroU32::new(size),
         }
     }
 
@@ -108,7 +108,7 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsage::SAMPLED,
+        usage: TextureUsage::SAMPLED | TextureUsage::COPY_DST,
     });
     let view = texture.create_view(&TextureViewDescriptor::default());
     let sampler = device.create_sampler(&SamplerDescriptor {

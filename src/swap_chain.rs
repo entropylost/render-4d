@@ -17,7 +17,6 @@ pub fn init_swap_chain(
     let surface = unsafe { instance.create_surface(window) };
     let adapter = block_on(instance.request_adapter(&RequestAdapterOptions {
         power_preference: PowerPreference::HighPerformance,
-        // Request an adapter which can render to our surface
         compatible_surface: Some(&surface),
     }))
     .expect("Failed to find an appropriate adapter");
@@ -25,7 +24,7 @@ pub fn init_swap_chain(
     let (device, queue) = block_on(adapter.request_device(
         &DeviceDescriptor {
             label: Some("device"),
-            features: Features::empty(),
+            features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
             limits: Limits::default(),
         },
         None,
