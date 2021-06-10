@@ -1,10 +1,9 @@
 #version 460
 
-
 struct Camera {
     vec4 origin;
     mat4 rotation;
-    uint view_size;
+    float voxel_size;
 };
 
 struct Ray {
@@ -25,7 +24,7 @@ layout (set = 1, binding = 1, r8ui) uniform writeonly uimage3D o_view_depth;
 
 Ray generate_ray() {
     vec3 voxel_centered = (vec3(gl_GlobalInvocationID) + 0.5) - vec3(gl_NumWorkGroups * gl_WorkGroupSize) / 2;
-    vec4 origin = u_camera.origin + u_camera.rotation * vec4(voxel_centered, 0);
+    vec4 origin = u_camera.origin + u_camera.rotation * vec4(voxel_centered * u_camera.voxel_size, 0);
     Ray ray;
     ray.origin = origin;
     ray.direction = u_camera.rotation * vec4(0, 0, 0, 1);

@@ -1,5 +1,4 @@
-#![allow(incomplete_features)]
-#![feature(const_generics)]
+#![feature(div_duration)]
 
 use crate::swap_chain::init_swap_chain;
 use crate::swap_chain::update_swap_chain;
@@ -19,7 +18,9 @@ use nalgebra::Vector4;
 use palette::Srgb;
 
 mod camera_3d;
+mod camera_4d;
 mod render_3d;
+mod render_4d;
 mod swap_chain;
 mod uniform_3d;
 mod view;
