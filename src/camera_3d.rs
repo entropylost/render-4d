@@ -5,7 +5,6 @@ use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
 use nalgebra::Matrix3;
 use nalgebra::Matrix4x3;
-use nalgebra::Rotation;
 use nalgebra::UnitQuaternion;
 use nalgebra::Vector2;
 use nalgebra::Vector3;
@@ -22,6 +21,17 @@ pub struct Camera {
     pub sensitivity: f32,
     pub speed: f32,
     pub active: bool,
+}
+
+#[repr(C)]
+#[derive(Pod, Zeroable, Copy, Clone, Debug)]
+pub struct CameraInternal {
+    position: Vector3<f32>,
+    _padding: f32,
+    inv_rotation: Matrix4x3<f32>,
+    window_size: Vector2<f32>,
+    aspect_ratio: f32,
+    tan_half_fov: f32,
 }
 
 impl Default for Camera {
@@ -46,17 +56,17 @@ impl Camera {
     }
 
     fn rotation_matrix(&self) -> Matrix3<f32> {
-        let rot = UnitQuaternion::from_axis_angle(&Vector3::y_axis(), self.x)
-            * UnitQuaternion::from_axis_angle(&-Vector3::x_axis(), self.y);
-        *Rotation::look_at_rh(&(rot * Vector3::y()), &Vector3::y())
-            .inverse()
-            .matrix()
+        println!("Camera facing: {:?} {:?}", self.x, self.y);
+        let rot = UnitQuaternion::from_axis_angle(&Vector3::z_axis(), self.x)
+            * UnitQuaternion::from_axis_angle(&Vector3::y_axis(), self.y)
+            * UnitQuaternion::from_axis_angle(&Vector3::z_axis(), -PI / 2.0);
+        *rot.to_rotation_matrix().matrix()
     }
 
     pub fn to_internal(&self, window_size: Vector2<f32>) -> CameraInternal {
         let r = self.rotation_matrix();
         #[rustfmt::skip]
-        let rotation = Matrix4x3::new(
+        let inv_rotation = Matrix4x3::new(
             r[(0, 0)], r[(0, 1)], r[(0, 2)],
             r[(1, 0)], r[(1, 1)], r[(1, 2)],
             r[(2, 0)], r[(2, 1)], r[(2, 2)],
@@ -65,23 +75,12 @@ impl Camera {
         CameraInternal {
             position: self.position,
             _padding: 0.0,
-            rotation,
+            inv_rotation,
             window_size,
             aspect_ratio: window_size.x / window_size.y,
             tan_half_fov: (self.fov / 2.0).tan(),
         }
     }
-}
-
-#[repr(C)]
-#[derive(Pod, Zeroable, Copy, Clone, Debug)]
-pub struct CameraInternal {
-    position: Vector3<f32>,
-    _padding: f32,
-    rotation: Matrix4x3<f32>,
-    window_size: Vector2<f32>,
-    aspect_ratio: f32,
-    tan_half_fov: f32,
 }
 
 pub struct CameraPlugin;
@@ -130,28 +129,28 @@ impl CameraPlugin {
         }
         let mut delta = Vector3::<f32>::zeros();
 
-        if key.pressed(KeyCode::D) {
+        if key.pressed(KeyCode::W) {
             delta += Vector3::x();
         }
-        if key.pressed(KeyCode::A) {
+        if key.pressed(KeyCode::S) {
             delta -= Vector3::x();
         }
-        if key.pressed(KeyCode::Space) {
-            delta += Vector3::y();
-        }
-        if key.pressed(KeyCode::LShift) {
+        if key.pressed(KeyCode::D) {
             delta -= Vector3::y();
         }
-        if key.pressed(KeyCode::W) {
-            delta -= Vector3::z();
+        if key.pressed(KeyCode::A) {
+            delta += Vector3::y();
         }
-        if key.pressed(KeyCode::S) {
+        if key.pressed(KeyCode::Space) {
             delta += Vector3::z();
+        }
+        if key.pressed(KeyCode::LShift) {
+            delta -= Vector3::z();
         }
         if delta != Vector3::zeros() {
             delta.normalize_mut();
             delta *= time.delta_seconds() * camera.speed;
-            delta = UnitQuaternion::from_axis_angle(&Vector3::y_axis(), camera.x) * delta;
+            delta = UnitQuaternion::from_axis_angle(&Vector3::z_axis(), camera.x) * delta;
             camera.position += delta;
         }
     }

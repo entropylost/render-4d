@@ -6,7 +6,7 @@ struct VoxelType {
 
 struct Camera {
     vec3 position;
-    mat3 rotation;
+    mat3 inv_rotation;
     vec2 window_size;
     float aspect_ratio;
     float tan_half_fov;
@@ -23,16 +23,16 @@ layout (set = 0, binding = 0) uniform Uniforms {
     Camera u_camera;
     VoxelType[256] types;
 };
-layout (set = 1, binding = 0) uniform utexture3D t_world_3d;
-layout (set = 1, binding = 1) uniform sampler s_world_3d;
+layout (set = 1, binding = 0) uniform utexture3D t_view;
+layout (set = 1, binding = 1) uniform sampler s_view;
 
 Ray generate_ray() {
     vec2 pixel_ndc = (gl_FragCoord.xy) / u_camera.window_size;
     vec2 pixel_camera = 2 * pixel_ndc - 1;
-    pixel_camera *= vec2(u_camera.aspect_ratio, -1);
+    pixel_camera *= vec2(u_camera.aspect_ratio, 1);
     pixel_camera *= u_camera.tan_half_fov;
 
-    vec3 unnorm_dir = u_camera.rotation * vec3(pixel_camera, -1);
+    vec3 unnorm_dir = u_camera.inv_rotation * vec3(pixel_camera, 1);
     Ray ray;
     ray.origin = u_camera.position;
     ray.direction = normalize(unnorm_dir);
@@ -40,11 +40,11 @@ Ray generate_ray() {
 }
 
 VoxelType get_voxel(ivec3 location) {
-    return types[texelFetch(usampler3D(t_world_3d, s_world_3d), location, 0).x];
+    return types[texelFetch(usampler3D(t_view, s_view), location, 0).x];
 }
 
 bool contains_voxel(ivec3 location) {
-    return texelFetch(usampler3D(t_world_3d, s_world_3d), location, 0).x != 0;
+    return texelFetch(usampler3D(t_view, s_view), location, 0).x != 0;
 }
 
 
