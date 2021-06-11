@@ -123,4 +123,5 @@ pub fn render(
     }
 
     queue.submit(std::iter::once(encoder.finish()));
+    std::thread::sleep(std::time::Duration::from_millis(8));
 }

@@ -1,7 +1,7 @@
+use bevy::prelude::*;
 use nalgebra::Rotation;
 use std::time::Duration;
 use std::time::Instant;
-use bevy::prelude::*;
 
 type Rotation4<T> = Rotation<T, 4>;
 
@@ -70,7 +70,9 @@ impl CameraPlugin {
     fn rotating_system(mut camera: ResMut<Camera>) {
         if let Some(rotating) = camera.rotating {
             let now = Instant::now();
-            let t = (now - rotating.start_time).div_duration_f32(camera.rotate_time).min(1.0);
+            let t = (now - rotating.start_time)
+                .div_duration_f32(camera.rotate_time)
+                .min(1.0);
             camera.rotation = (rotating.interpolate)(t);
             if t == 1.0 {
                 camera.rotating = None;

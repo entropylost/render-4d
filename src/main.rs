@@ -34,7 +34,7 @@ fn main() {
         title: "render-4d".to_string(),
         width: 500.0,
         height: 500.0,
-        vsync: true,
+        vsync: false,
         ..Default::default()
     })
     .insert_resource(WorldSize(5))
