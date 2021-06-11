@@ -91,6 +91,7 @@ pub fn render(
     view_3d_bind_group: Res<View3dBindGroup>,
     vertex_buffer: Res<VertexBuffer>,
 ) {
+    device.poll(Maintain::Wait);
     let vertex_buffer = &vertex_buffer.0;
     let frame = swap_chain.get_current_frame().unwrap().output;
     let mut encoder = device.create_command_encoder(&CommandEncoderDescriptor {
@@ -123,5 +124,4 @@ pub fn render(
     }
 
     queue.submit(std::iter::once(encoder.finish()));
-    std::thread::sleep(std::time::Duration::from_millis(8));
 }

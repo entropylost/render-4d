@@ -68,7 +68,7 @@ void main() {
 
     bvec3 mask;
 
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 128 * 3; i++) {
         if (contains_voxel(grid_pos)) break;
 
         mask = lessThanEqual(side_dist.xyz, min(side_dist.yzx, side_dist.zxy));
