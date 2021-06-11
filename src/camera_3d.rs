@@ -53,7 +53,6 @@ impl Camera {
     }
 
     fn rotation_matrix(&self) -> Matrix3<f32> {
-        println!("Camera facing: {:?} {:?}", self.x, self.y);
         let rot = UnitQuaternion::from_axis_angle(&Vector3::z_axis(), self.x)
             * UnitQuaternion::from_axis_angle(&Vector3::y_axis(), self.y)
             * UnitQuaternion::from_axis_angle(&Vector3::z_axis(), -PI / 2.0);
@@ -150,20 +149,46 @@ impl CameraPlugin {
             camera.position += delta;
         }
     }
-    fn update_uniform_system(
-        camera: Res<Camera>,
-        mut uniforms: ResMut<Uniforms>,
-    ) {
+    fn update_uniform_system(camera: Res<Camera>, mut uniforms: ResMut<Uniforms>) {
         if camera.is_changed() {
             uniforms.camera = camera.to_internal();
         }
     }
 }
+
+#[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
+enum Labels {
+    CursorGrab,
+    Rotate,
+    Move,
+    UpdateUniform,
+}
+
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app.add_system(Self::cursor_grab_system.system())
-            .add_system(Self::rotate_system.system())
-            .add_system(Self::move_system.system())
-            .add_system(Self::update_uniform_system.system());
+        app.add_system_set(
+            SystemSet::new()
+                .label("camera-3d")
+                .with_system(Self::cursor_grab_system.system().label(Labels::CursorGrab))
+                .with_system(
+                    Self::rotate_system
+                        .system()
+                        .label(Labels::Rotate)
+                        .after(Labels::CursorGrab),
+                )
+                .with_system(
+                    Self::move_system
+                        .system()
+                        .label(Labels::Move)
+                        .after(Labels::CursorGrab),
+                )
+                .with_system(
+                    Self::update_uniform_system
+                        .system()
+                        .label(Labels::UpdateUniform)
+                        .after(Labels::Rotate)
+                        .after(Labels::Move),
+                ),
+        );
     }
 }

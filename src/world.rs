@@ -85,9 +85,7 @@ impl IndexMut<Vector4<u32>> for World {
     }
 }
 
-#[derive(Debug)]
 pub struct WorldTexture(pub Texture, pub Extent3d);
-#[derive(Debug)]
 pub struct WorldBindGroup(pub BindGroup, pub BindGroupLayout);
 
 pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Device>) {

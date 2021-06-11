@@ -1,10 +1,9 @@
-use nalgebra::Vector2;
-use crate::camera_3d::Camera;
 use crate::camera_3d::CameraInternal;
 use crate::voxel::VoxelTypeInternal;
 use crate::window_size::WindowSize;
 use bevy::prelude::*;
 use bytemuck::*;
+use nalgebra::Vector2;
 use wgpu::*;
 
 #[repr(C)]
@@ -19,12 +18,7 @@ pub struct Uniforms {
 pub struct UniformBuffer(pub Buffer);
 pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
-pub fn init_uniforms(
-    mut commands: Commands,
-    camera: Res<Camera>,
-    device: Res<Device>,
-    window_size: Res<WindowSize>,
-) {
+pub fn init_uniforms(mut commands: Commands, device: Res<Device>, window_size: Res<WindowSize>) {
     let buffer = device.create_buffer(&BufferDescriptor {
         label: Some("uniform-3d-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
@@ -68,7 +62,6 @@ pub fn update_uniform_buffer(
     buffer: ResMut<UniformBuffer>,
 ) {
     if uniforms.is_changed() {
-        println!("Uniforms: {:?}", uniforms);
         queue.write_buffer(&buffer.0, 0, bytemuck::cast_slice(&[*uniforms]));
     }
 }

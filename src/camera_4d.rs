@@ -1,8 +1,11 @@
+use crate::uniform_4d::Uniforms;
+use crate::world::WorldSize;
 use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
 use nalgebra::Matrix4;
 use nalgebra::Rotation;
 use nalgebra::Vector4;
+use std::f32::consts::PI;
 use std::time::Duration;
 use std::time::Instant;
 
@@ -27,6 +30,7 @@ pub struct Rotating {
 pub struct CameraInternal {
     position: Vector4<f32>,
     inv_rotation: Matrix4<f32>,
+    voxel_size: f32,
 }
 
 impl Camera {
@@ -56,13 +60,61 @@ impl Camera {
         });
         return true;
     }
+
+    fn to_internal(&self, world_size: WorldSize) -> CameraInternal {
+        let inv_rotation = *self.rotation.inverse().matrix();
+        CameraInternal {
+            position: Vector4::repeat(world_size.0 as f32 / 2.0)
+                - inv_rotation * Vector4::new(0.0, 0.0, 0.0, 1.0) * world_size.0 as f32 * 2.0,
+            inv_rotation,
+            voxel_size: 1.0, // TODO
+        }
+    }
 }
 
 fn r1(t: f32) -> Rotation4<f32> {
-    todo!()
+    if t == 1.0 {
+        #[rustfmt::skip]
+        let rot = Matrix4::new(
+            0.0, -1., 0.0, 0.0,
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        );
+        Rotation4::from_matrix_unchecked(rot)
+    } else {
+        let t = t * PI / 2.0;
+        #[rustfmt::skip]
+        let rot = Matrix4::new(
+            t.cos(), -t.sin(), 0.0, 0.0,
+            t.sin(), t.cos(), 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        );
+        Rotation4::from_matrix_unchecked(rot)
+    }
 }
 fn r2(t: f32) -> Rotation4<f32> {
-    todo!()
+    if t == 1.0 {
+        #[rustfmt::skip]
+        let rot = Matrix4::new(
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            0.0, -1., 0.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        );
+        Rotation4::from_matrix_unchecked(rot)
+    } else {
+        let t = t * PI / 2.0;
+        #[rustfmt::skip]
+        let rot = Matrix4::new(
+            1.0, 0.0, 0.0, 0.0,
+            0.0, t.cos(), t.sin(), 0.0,
+            0.0, -t.sin(), t.cos(), 0.0,
+            0.0, 0.0, 0.0, 1.0,
+        );
+        Rotation4::from_matrix_unchecked(rot)
+    }
 }
 fn r1_inv(t: f32) -> Rotation4<f32> {
     r1(-t)
@@ -102,5 +154,43 @@ impl CameraPlugin {
                 camera.rotating = None;
             }
         }
+    }
+    fn update_uniform_system(
+        world_size: Res<WorldSize>,
+        camera: Res<Camera>,
+        mut uniforms: ResMut<Uniforms>,
+    ) {
+        if camera.is_changed() {
+            uniforms.camera = camera.to_internal(*world_size);
+        }
+    }
+}
+
+#[derive(SystemLabel, Clone, Hash, Debug, Eq, PartialEq)]
+enum Labels {
+    Rotate,
+    Rotating,
+    UpdateUniform,
+}
+
+impl Plugin for CameraPlugin {
+    fn build(&self, app: &mut AppBuilder) {
+        app.add_system_set(
+            SystemSet::new()
+                .label("camera-4d")
+                .with_system(Self::rotate_system.system().label(Labels::Rotate))
+                .with_system(
+                    Self::rotating_system
+                        .system()
+                        .label(Labels::Rotating)
+                        .after(Labels::Rotate),
+                )
+                .with_system(
+                    Self::update_uniform_system
+                        .system()
+                        .label(Labels::UpdateUniform)
+                        .after(Labels::Rotating),
+                ),
+        );
     }
 }

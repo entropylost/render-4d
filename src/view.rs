@@ -5,13 +5,9 @@ use wgpu::*;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct ViewSize(pub u32);
 
-#[derive(Debug)]
 pub struct ViewTexture(pub Texture, pub Extent3d);
-#[derive(Debug)]
 pub struct ViewDepthTexture(pub Texture, pub Extent3d);
-#[derive(Debug)]
 pub struct View3dBindGroup(pub BindGroup, pub BindGroupLayout);
-#[derive(Debug)]
 pub struct View4dBindGroup(pub BindGroup, pub BindGroupLayout);
 
 pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device>) {
