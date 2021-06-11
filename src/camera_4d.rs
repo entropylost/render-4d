@@ -1,12 +1,14 @@
 use bevy::prelude::*;
+use bytemuck::{Pod, Zeroable};
+use nalgebra::Matrix4;
 use nalgebra::Rotation;
+use nalgebra::Vector4;
 use std::time::Duration;
 use std::time::Instant;
 
 type Rotation4<T> = Rotation<T, 4>;
 
 #[derive(Copy, Clone, Debug)]
-
 pub struct Camera {
     pub rotate_time: Duration,
     pub rotating: Option<Rotating>,
@@ -18,6 +20,14 @@ pub struct Rotating {
     last_rotation: Rotation4<f32>,
     interpolate: fn(f32) -> Rotation4<f32>,
     start_time: Instant,
+}
+
+#[repr(C)]
+#[derive(Pod, Zeroable, Copy, Clone, Debug)]
+pub struct CameraInternal {
+    position: Vector4<f32>,
+    inv_rotation: Matrix4<f32>,
+    voxel_size: f32,
 }
 
 impl Camera {

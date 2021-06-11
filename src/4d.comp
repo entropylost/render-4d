@@ -1,8 +1,8 @@
 #version 460
 
 struct Camera {
-    vec4 origin;
-    mat4 rotation;
+    vec4 position;
+    mat4 inv_rotation;
     float voxel_size;
 };
 
@@ -11,7 +11,7 @@ struct Ray {
     vec4 direction;
 };
 
-layout (local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 layout (set = 0, binding = 0) uniform Uniforms {
     Camera u_camera;
     uint u_world_size;
@@ -24,10 +24,10 @@ layout (set = 1, binding = 1, r8ui) uniform writeonly uimage3D o_view_depth;
 
 Ray generate_ray() {
     vec3 voxel_centered = (vec3(gl_GlobalInvocationID) + 0.5) - vec3(gl_NumWorkGroups * gl_WorkGroupSize) / 2;
-    vec4 origin = u_camera.origin + u_camera.rotation * vec4(voxel_centered * u_camera.voxel_size, 0);
+    vec4 origin = u_camera.position + u_camera.inv_rotation * vec4(voxel_centered * u_camera.voxel_size, 0);
     Ray ray;
     ray.origin = origin;
-    ray.direction = u_camera.rotation * vec4(0, 0, 0, 1);
+    ray.direction = u_camera.inv_rotation * vec4(0, 0, 0, 1);
     return ray;
 }
 
@@ -41,14 +41,14 @@ bool update_ray_intersection(inout Ray ray) {
     if (t_min >= t_max) {
         return false;
     } else {
-        ray.origin += ray.direction * (t_min - 0.3);
+        ray.origin += ray.direction * (t_min + 0.3);
         return true;
     }
 }
 
 void main() {
     Ray ray = generate_ray();
-    uint value = 0;
+    uint value = 1;
     // ...
     imageStore(o_view, ivec3(gl_GlobalInvocationID), uvec4(value, 0, 0, 0));
 }
