@@ -1,3 +1,4 @@
+use crate::uniform_3d::Uniforms;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
 use nalgebra::Vector2;
@@ -24,9 +25,11 @@ pub fn update_window_size(
     winit_windows: Res<WinitWindows>,
     windows: Res<Windows>,
     mut window_size: ResMut<WindowSize>,
+    mut uniforms: ResMut<Uniforms>,
 ) {
     let size = get_window_size(&winit_windows, &windows);
     if size != *window_size {
         *window_size = size;
+        uniforms.window_size = size.0.cast();
     }
 }

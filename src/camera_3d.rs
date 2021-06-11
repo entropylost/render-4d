@@ -1,12 +1,10 @@
 use crate::uniform_3d::Uniforms;
-use crate::window_size::WindowSize;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
 use nalgebra::Matrix3;
 use nalgebra::Matrix4x3;
 use nalgebra::UnitQuaternion;
-use nalgebra::Vector2;
 use nalgebra::Vector3;
 use std::f32::consts::PI;
 use std::ops::RangeInclusive;
@@ -24,14 +22,13 @@ pub struct Camera {
 }
 
 #[repr(C)]
-#[derive(Pod, Zeroable, Copy, Clone, Debug)]
+#[derive(Pod, Zeroable, Copy, Clone, Debug, Default)]
 pub struct CameraInternal {
     position: Vector3<f32>,
     _padding: f32,
     inv_rotation: Matrix4x3<f32>,
-    window_size: Vector2<f32>,
-    aspect_ratio: f32,
     tan_half_fov: f32,
+    _padding_2: [f32; 3],
 }
 
 impl Default for Camera {
@@ -63,7 +60,7 @@ impl Camera {
         *rot.to_rotation_matrix().matrix()
     }
 
-    pub fn to_internal(&self, window_size: Vector2<f32>) -> CameraInternal {
+    pub fn to_internal(&self) -> CameraInternal {
         let r = self.rotation_matrix();
         #[rustfmt::skip]
         let inv_rotation = Matrix4x3::new(
@@ -76,9 +73,8 @@ impl Camera {
             position: self.position,
             _padding: 0.0,
             inv_rotation,
-            window_size,
-            aspect_ratio: window_size.x / window_size.y,
             tan_half_fov: (self.fov / 2.0).tan(),
+            _padding_2: [0.0; 3],
         }
     }
 }
@@ -155,12 +151,11 @@ impl CameraPlugin {
         }
     }
     fn update_uniform_system(
-        window_size: Res<WindowSize>,
         camera: Res<Camera>,
         mut uniforms: ResMut<Uniforms>,
     ) {
         if camera.is_changed() {
-            uniforms.camera = camera.to_internal(window_size.0.cast());
+            uniforms.camera = camera.to_internal();
         }
     }
 }

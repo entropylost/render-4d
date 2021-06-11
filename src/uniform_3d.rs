@@ -1,3 +1,4 @@
+use nalgebra::Vector2;
 use crate::camera_3d::Camera;
 use crate::camera_3d::CameraInternal;
 use crate::voxel::VoxelTypeInternal;
@@ -10,6 +11,8 @@ use wgpu::*;
 #[derive(Pod, Zeroable, Clone, Copy, Debug)]
 pub struct Uniforms {
     pub camera: CameraInternal,
+    pub window_size: Vector2<f32>,
+    _padding: [f32; 2],
     pub voxel_types: [VoxelTypeInternal; 256],
 }
 
@@ -50,7 +53,9 @@ pub fn init_uniforms(
         }],
     });
     commands.insert_resource(Uniforms {
-        camera: camera.to_internal(window_size.0.cast()),
+        camera: Default::default(),
+        window_size: window_size.0.cast(),
+        _padding: Default::default(),
         voxel_types: [Default::default(); 256],
     });
     commands.insert_resource(UniformBuffer(buffer));
@@ -63,6 +68,7 @@ pub fn update_uniform_buffer(
     buffer: ResMut<UniformBuffer>,
 ) {
     if uniforms.is_changed() {
+        println!("Uniforms: {:?}", uniforms);
         queue.write_buffer(&buffer.0, 0, bytemuck::cast_slice(&[*uniforms]));
     }
 }

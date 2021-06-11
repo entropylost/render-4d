@@ -27,10 +27,24 @@ pub struct Rotating {
 pub struct CameraInternal {
     position: Vector4<f32>,
     inv_rotation: Matrix4<f32>,
-    voxel_size: f32,
 }
 
 impl Camera {
+    pub fn new() -> Self {
+        #[rustfmt::skip]
+        let rotation = Matrix4::new(
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 1.0,
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+        );
+        Camera {
+            rotate_time: Duration::from_secs(1),
+            rotating: None,
+            rotation: Rotation4::from_matrix_unchecked(rotation),
+        }
+    }
+
     fn rotate(&mut self, f: fn(f32) -> Rotation4<f32>) -> bool {
         if self.rotating.is_some() {
             return false;
