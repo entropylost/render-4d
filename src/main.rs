@@ -28,6 +28,7 @@ mod view;
 mod voxel;
 mod window_size;
 mod world;
+mod utils;
 
 fn main() {
     let mut app = App::build();
@@ -40,7 +41,8 @@ fn main() {
     })
     .insert_resource(WorldSize(5))
     .insert_resource(ViewSize(5))
-    .insert_resource(camera_3d::Camera::new(Vector3::new(4.0, 4.0, 4.0), 0.0));
+    .insert_resource(camera_3d::Camera::new(Vector3::new(-4.0, -4.0, -4.0), 0.0))
+    .insert_resource(camera_4d::Camera::new());
     app.add_plugins(DefaultPlugins)
         .add_plugin(DiagnosticsPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
@@ -91,7 +93,6 @@ fn main() {
             uniform_3d::update_uniform_buffer
                 .system()
                 .label("update-uniforms-3d")
-                .before("render")
                 .after("camera-3d")
                 .after("update-swap-chain"),
         )

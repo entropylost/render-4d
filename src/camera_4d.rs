@@ -26,7 +26,7 @@ pub struct Rotating {
 }
 
 #[repr(C)]
-#[derive(Pod, Zeroable, Copy, Clone, Debug)]
+#[derive(Pod, Zeroable, Copy, Clone, Debug, Default)]
 pub struct CameraInternal {
     position: Vector4<f32>,
     inv_rotation: Matrix4<f32>,

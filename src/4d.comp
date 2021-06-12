@@ -19,8 +19,8 @@ layout (set = 0, binding = 0) uniform Uniforms {
 // x, y, z + (w * u_world_size)
 layout (set = 1, binding = 0) uniform utexture3D t_world;
 layout (set = 1, binding = 1) uniform sampler s_world;
-layout (set = 1, binding = 0, r8ui) uniform writeonly uimage3D o_view;
-layout (set = 1, binding = 1, r8ui) uniform writeonly uimage3D o_view_depth;
+layout (set = 2, binding = 0, r8ui) uniform writeonly uimage3D o_view;
+layout (set = 2, binding = 1, r8ui) uniform writeonly uimage3D o_view_depth;
 
 Ray generate_ray() {
     vec3 voxel_centered = (vec3(gl_GlobalInvocationID) + 0.5) - vec3(gl_NumWorkGroups * gl_WorkGroupSize) / 2;
