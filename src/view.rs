@@ -1,4 +1,3 @@
-use crate::world::World;
 use bevy::prelude::*;
 use wgpu::*;
 
@@ -132,21 +131,4 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
     commands.insert_resource(ViewDepthTexture(depth_texture, extent));
     commands.insert_resource(View3dBindGroup(bind_group_3d, bind_group_layout_3d));
     commands.insert_resource(View4dBindGroup(bind_group_4d, bind_group_layout_4d));
-}
-
-pub fn update_view(world: Res<World>, queue: Res<Queue>, texture: Res<ViewTexture>) {
-    if world.is_changed() {
-        let bytes = world.voxel_bytes();
-        let size = world.size();
-        queue.write_texture(
-            ImageCopyTexture {
-                texture: &texture.0,
-                mip_level: 0,
-                origin: Origin3d::ZERO,
-            },
-            &bytes[0..bytes.len() / size as usize],
-            world.texture_layout(),
-            texture.1,
-        );
-    }
 }

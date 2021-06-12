@@ -31,6 +31,7 @@ pub struct CameraInternal {
     position: Vector4<f32>,
     inv_rotation: Matrix4<f32>,
     voxel_size: f32,
+    _padding: [f32; 3],
 }
 
 impl Camera {
@@ -68,6 +69,7 @@ impl Camera {
                 - inv_rotation * Vector4::new(0.0, 0.0, 0.0, 1.0) * world_size.0 as f32 * 2.0,
             inv_rotation,
             voxel_size: 1.0, // TODO
+            _padding: [0.0; 3],
         }
     }
 }

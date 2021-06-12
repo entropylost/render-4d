@@ -39,8 +39,8 @@ fn main() {
         vsync: false,
         ..Default::default()
     })
-    .insert_resource(WorldSize(5))
-    .insert_resource(ViewSize(5))
+    .insert_resource(WorldSize(8))
+    .insert_resource(ViewSize(8))
     .insert_resource(camera_3d::Camera::new(Vector3::new(-4.0, -4.0, -4.0), 0.0))
     .insert_resource(camera_4d::Camera::new());
     app.add_plugins(DefaultPlugins)
@@ -81,7 +81,6 @@ fn main() {
         .add_system(update_window_size.system().before("update-swap-chain"))
         .add_system(update_swap_chain.system().label("update-swap-chain"))
         .add_system(update_world.system().label("update-world"))
-        .add_system(view::update_view.system().label("update-view"))
         .add_system(
             uniform_4d::update_uniform_buffer
                 .system()
