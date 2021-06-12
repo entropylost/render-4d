@@ -39,14 +39,14 @@ fn main() {
         vsync: false,
         ..Default::default()
     })
-    .insert_resource(WorldSize(8))
-    .insert_resource(ViewSize(8))
+    .insert_resource(WorldSize(32))
+    .insert_resource(ViewSize(64))
     .insert_resource(camera_3d::Camera::new(Vector3::new(-4.0, -4.0, -4.0), 0.0))
     .insert_resource(camera_4d::Camera::new());
     app.add_plugins(DefaultPlugins)
-        .add_plugin(DiagnosticsPlugin)
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin)
+        // .add_plugin(DiagnosticsPlugin)
+        // .add_plugin(LogDiagnosticsPlugin::default())
+        // .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(camera_3d::CameraPlugin)
         .add_plugin(camera_4d::CameraPlugin);
     app.add_startup_stage_after(
@@ -115,10 +115,10 @@ fn main() {
 fn init_world_data(mut world: ResMut<World>) {
     let normal_type = world.insert_type(VoxelType::new(Srgb::new(0.212, 0.247, 0.278)));
 
-    for i in 0..8 {
-        for j in 0..8 {
-            for k in 0..8 {
-                for l in 0..8 {
+    for i in 8..30 {
+        for j in 8..24 {
+            for k in 8..13 {
+                for l in 5..26 {
                     world[Vector4::new(i, j, k, l)] = normal_type;
                 }
             }

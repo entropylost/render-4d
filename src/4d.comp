@@ -2,7 +2,7 @@
 
 struct Camera {
     vec4 position;
-    mat4 inv_rotation;
+    mat4 rotation;
     float voxel_size;
 };
 
@@ -22,12 +22,14 @@ layout (set = 1, binding = 1) uniform sampler s_world;
 layout (set = 2, binding = 0, r8ui) uniform writeonly uimage3D o_view;
 layout (set = 2, binding = 1, r8ui) uniform writeonly uimage3D o_view_depth;
 
+const float EPSILON = 1.19209290e-07;
+
 Ray generate_ray() {
     vec3 voxel_centered = (vec3(gl_GlobalInvocationID) + 0.5) - vec3(gl_NumWorkGroups * gl_WorkGroupSize) / 2;
-    vec4 origin = u_camera.position + u_camera.inv_rotation * vec4(voxel_centered * u_camera.voxel_size, 0);
+    vec4 origin = u_camera.position + u_camera.rotation * vec4(voxel_centered * u_camera.voxel_size, 0);
     Ray ray;
     ray.origin = origin;
-    ray.direction = u_camera.inv_rotation * vec4(0, 0, 0, 1);
+    ray.direction = u_camera.rotation * vec4(0, 0, 0, 1);
     return ray;
 }
 
@@ -47,7 +49,11 @@ bool update_ray_intersection(inout Ray ray) {
 }
 
 uint get_voxel(ivec4 location) {
-    return texelFetch(usampler3D(t_world, s_world), ivec3(location.xy, location.z + u_world_size * location.w), 0).x;
+    if (location.z < 0 || location.z >= u_world_size) {
+        return 0;
+    } else {
+        return texelFetch(usampler3D(t_world, s_world), ivec3(location.xy, location.z + u_world_size * location.w), 0).x;
+    }
 }
 
 bool contains_voxel(ivec4 location) {
@@ -59,7 +65,7 @@ void main() {
 
     ivec4 voxel_pos = ivec4(floor(ray.origin));
 
-    vec4 delta_dist = abs(vec4(1) / ray.direction);
+    vec4 delta_dist = abs(vec4(1) / (ray.direction + vec4(EPSILON)));
 
     ivec4 ray_step = ivec4(sign(ray.direction));
 

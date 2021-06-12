@@ -29,9 +29,19 @@ pub struct Rotating {
 #[derive(Pod, Zeroable, Copy, Clone, Debug, Default)]
 pub struct CameraInternal {
     position: Vector4<f32>,
-    inv_rotation: Matrix4<f32>,
+    rotation: Matrix4<f32>,
     voxel_size: f32,
     _padding: [f32; 3],
+}
+
+fn print_mat4(m: Matrix4<f32>) {
+    #[rustfmt::skip]
+    println!("{} {} {} {}\n{} {} {} {}\n{} {} {} {}\n{} {} {} {}",
+        m[(0, 0)], m[(0, 1)], m[(0, 2)], m[(0, 3)],
+        m[(1, 0)], m[(1, 1)], m[(1, 2)], m[(1, 3)],
+        m[(2, 0)], m[(2, 1)], m[(2, 2)], m[(2, 3)],
+        m[(3, 0)], m[(3, 1)], m[(3, 2)], m[(3, 3)],
+    );
 }
 
 impl Camera {
@@ -43,6 +53,7 @@ impl Camera {
             1.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
         );
+        print_mat4(rotation);
         Camera {
             rotate_time: Duration::from_secs(1),
             rotating: None,
@@ -63,11 +74,11 @@ impl Camera {
     }
 
     fn to_internal(&self, world_size: WorldSize) -> CameraInternal {
-        let inv_rotation = *self.rotation.inverse().matrix();
+        let rotation = *self.rotation.matrix();
         CameraInternal {
             position: Vector4::repeat(world_size.0 as f32 / 2.0)
-                - inv_rotation * Vector4::new(0.0, 0.0, 0.0, 1.0) * world_size.0 as f32 * 2.0,
-            inv_rotation,
+                - rotation * Vector4::new(0.0, 0.0, 0.0, 1.0) * world_size.0 as f32 * 2.0,
+            rotation,
             voxel_size: 1.0, // TODO
             _padding: [0.0; 3],
         }
@@ -151,8 +162,13 @@ impl CameraPlugin {
             let t = (now - rotating.start_time)
                 .div_duration_f32(camera.rotate_time)
                 .min(1.0);
-            camera.rotation = (rotating.interpolate)(t);
+            camera.rotation = (rotating.interpolate)(t) * rotating.last_rotation;
             if t == 1.0 {
+                print_mat4(*camera.rotation.matrix());
+                println!("X -> {:?}", camera.rotation * Vector4::x());
+                println!("Y -> {:?}", camera.rotation * Vector4::y());
+                println!("Z -> {:?}", camera.rotation * Vector4::z());
+                println!("W -> {:?}", camera.rotation * Vector4::w());
                 camera.rotating = None;
             }
         }
