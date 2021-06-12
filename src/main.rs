@@ -107,8 +107,7 @@ fn main() {
                 .system()
                 .label("render-3d")
                 .after("update-uniforms-3d")
-                .after("render-4d")
-                .after("update-view"),
+                .after("render-4d"),
         );
     app.run();
 }
@@ -116,10 +115,10 @@ fn main() {
 fn init_world_data(mut world: ResMut<World>) {
     let normal_type = world.insert_type(VoxelType::new(Srgb::new(0.212, 0.247, 0.278)));
 
-    for i in 0..2 {
-        for j in 0..2 {
-            for k in 0..2 {
-                for l in 0..2 {
+    for i in 0..8 {
+        for j in 0..8 {
+            for k in 0..8 {
+                for l in 0..8 {
                     world[Vector4::new(i, j, k, l)] = normal_type;
                 }
             }

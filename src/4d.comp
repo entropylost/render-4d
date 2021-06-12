@@ -46,9 +46,37 @@ bool update_ray_intersection(inout Ray ray) {
     }
 }
 
+uint get_voxel(ivec4 location) {
+    return texelFetch(usampler3D(t_world, s_world), ivec3(location.xy, location.z + u_world_size * location.w), 0).x;
+}
+
+bool contains_voxel(ivec4 location) {
+    return get_voxel(location) != 0;
+}
+
 void main() {
     Ray ray = generate_ray();
-    uint value = 1;
-    // ...
-    imageStore(o_view, ivec3(gl_GlobalInvocationID), uvec4(value, 0, 0, 0));
+
+    ivec4 voxel_pos = ivec4(floor(ray.origin));
+
+    vec4 delta_dist = abs(vec4(1) / ray.direction);
+
+    ivec4 ray_step = ivec4(sign(ray.direction));
+
+    vec4 side_dist = (sign(ray.direction) * (vec4(voxel_pos) - ray.origin) + sign(ray.direction) * 0.5 + 0.5) * delta_dist;
+
+    bvec4 mask;
+
+    for (int i = 0; i < 128 * 3; i++) {
+        if (contains_voxel(voxel_pos)) break;
+
+        mask = lessThanEqual(side_dist.xyzw, min(side_dist.yzwx, min(side_dist.zwxy, side_dist.wxyz)));
+
+        side_dist += vec4(mask) * delta_dist;
+        voxel_pos += ivec4(mask) * ray_step;
+    }
+
+    uint voxel = get_voxel(voxel_pos);
+
+    imageStore(o_view, ivec3(gl_GlobalInvocationID), uvec4(voxel, 0, 0, 0));
 }

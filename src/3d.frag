@@ -52,7 +52,7 @@ void main() {
     Ray ray = generate_ray();
 
     // Position of the voxel the ray is currently in (integer)
-    ivec3 grid_pos = ivec3(floor(ray.origin));
+    ivec3 voxel_pos = ivec3(floor(ray.origin));
 
     // The amount you need to go along the ray to increment the voxel by one.
     vec3 delta_dist = abs(vec3(1) / ray.direction);
@@ -61,22 +61,22 @@ void main() {
     ivec3 ray_step = ivec3(sign(ray.direction));
 
     // sign(ray.direction) * 0.5 + 0.5: 0 if the direction is negative, 1 if its positive, per coord.
-    // vec3(grid_pos) - ray.origin: Fractional part of the ray origin.
+    // vec3(voxel_pos) - ray.origin: Fractional part of the ray origin.
     // The distance to the next voxel along all 3 directions.
-    vec3 side_dist = (sign(ray.direction) * (vec3(grid_pos) - ray.origin) + sign(ray.direction) * 0.5 + 0.5) * delta_dist;
+    vec3 side_dist = (sign(ray.direction) * (vec3(voxel_pos) - ray.origin) + sign(ray.direction) * 0.5 + 0.5) * delta_dist;
 
     bvec3 mask;
 
     for (int i = 0; i < 128 * 3; i++) {
-        if (contains_voxel(grid_pos)) break;
+        if (contains_voxel(voxel_pos)) break;
 
         mask = lessThanEqual(side_dist.xyz, min(side_dist.yzx, side_dist.zxy));
 
         side_dist += vec3(mask) * delta_dist;
-        grid_pos += ivec3(vec3(mask)) * ray_step;
+        voxel_pos += ivec3(mask) * ray_step;
     }
 
-    VoxelType voxel = get_voxel(grid_pos);
+    VoxelType voxel = get_voxel(voxel_pos);
 
     float shadow;
     if (mask.x) {
@@ -89,5 +89,5 @@ void main() {
         shadow = 0.75;
     }
 
-    frag_color = vec4(contains_voxel(grid_pos) ? shadow * voxel.color : vec3(0), 1);
+    frag_color = vec4(contains_voxel(voxel_pos) ? shadow * voxel.color : vec3(0), 1);
 }
