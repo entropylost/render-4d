@@ -53,6 +53,7 @@ impl Camera {
             1.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
         );
+        println!("{:?}", rotation);
         print_mat4(rotation);
         Camera {
             rotate_time: Duration::from_secs(1),
@@ -143,12 +144,14 @@ impl CameraPlugin {
             return;
         }
         if key.just_pressed(KeyCode::Q) {
+            println!("Q");
             if key.pressed(KeyCode::LShift) {
                 camera.rotate(r1_inv);
             } else {
                 camera.rotate(r1);
             }
         } else if key.just_pressed(KeyCode::E) {
+            println!("E");
             if key.pressed(KeyCode::LShift) {
                 camera.rotate(r2_inv);
             } else {

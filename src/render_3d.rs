@@ -29,12 +29,12 @@ pub fn init_render_pipeline(
     let vert = device.create_shader_module(&ShaderModuleDescriptor {
         label: Some("vertex-3d"),
         source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!("3d.vert.spv")))),
-        flags: ShaderFlags::all(),
+        flags: ShaderFlags::empty(),
     });
     let frag = device.create_shader_module(&ShaderModuleDescriptor {
         label: Some("fragment-3d"),
         source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!("3d.frag.spv")))),
-        flags: ShaderFlags::all(),
+        flags: ShaderFlags::empty(),
     });
 
     let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
