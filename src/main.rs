@@ -39,7 +39,7 @@ fn main() {
         vsync: false,
         ..Default::default()
     })
-    .insert_resource(WorldSize(64))
+    .insert_resource(WorldSize(88))
     .insert_resource(ViewSize(128))
     .insert_resource(camera_3d::Camera::new(Vector3::new(4.0, 4.0, 4.0), 0.0))
     .insert_resource(camera_4d::Camera::new());
