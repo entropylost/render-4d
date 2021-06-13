@@ -34,17 +34,17 @@ Ray generate_ray() {
 }
 
 bool update_ray_intersection(inout Ray ray) {
-    vec4 t0 = - ray.origin / ray.direction;
-    vec4 t1 = (vec4(u_world_size) - ray.origin) / ray.direction;
+    vec4 t0 = (vec4(1) - ray.origin) / ray.direction;
+    vec4 t1 = (vec4(u_world_size - 1) - ray.origin) / ray.direction;
     vec4 t_min_v = min(t0, t1);
     vec4 t_max_v = max(t0, t1);
     float t_min = max(t_min_v.x, max(t_min_v.y, max(t_min_v.z, t_min_v.w)));
     float t_max = min(t_max_v.x, min(t_max_v.y, min(t_max_v.z, t_max_v.w)));
     if (t_min >= t_max) {
-        return false;
+        return true;
     } else {
         ray.origin += ray.direction * (t_min + 0.3);
-        return true;
+        return false;
     }
 }
 
@@ -60,8 +60,12 @@ bool contains_voxel(ivec4 location) {
     return get_voxel(location) != 0;
 }
 
-void main() {
+uint trace_ray() {
     Ray ray = generate_ray();
+
+    if (update_ray_intersection(ray)) {
+        return 1;
+    }
 
     ivec4 voxel_pos = ivec4(floor(ray.origin));
 
@@ -82,7 +86,10 @@ void main() {
         voxel_pos += ivec4(mask) * ray_step;
     }
 
-    uint voxel = get_voxel(voxel_pos);
+    return get_voxel(voxel_pos);
+}
 
+void main() {
+    uint voxel = trace_ray();
     imageStore(o_view, ivec3(gl_GlobalInvocationID), uvec4(voxel, 0, 0, 0));
 }

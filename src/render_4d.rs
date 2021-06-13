@@ -1,12 +1,12 @@
-use nalgebra::Vector3;
-use crate::world::WorldSize;
-use std::borrow::Cow;
-use crate::utils::to_u32_array;
 use crate::uniform_4d::UniformBindGroup;
-use crate::world::WorldBindGroup;
+use crate::utils::to_u32_array;
 use crate::view::View4dBindGroup;
-use wgpu::*;
+use crate::world::WorldBindGroup;
+use crate::world::WorldSize;
 use bevy::prelude::*;
+use nalgebra::Vector3;
+use std::borrow::Cow;
+use wgpu::*;
 
 const LOCAL_WORKGROUP_SIZE: Vector3<u32> = Vector3::new(8, 8, 1);
 
@@ -25,7 +25,11 @@ pub fn init_render_pipeline(
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: Some("render-4d-pipeline-layout"),
-        bind_group_layouts: &[&uniform_bind_group.1, &world_bind_group.1, &view_bind_group.1],
+        bind_group_layouts: &[
+            &uniform_bind_group.1,
+            &world_bind_group.1,
+            &view_bind_group.1,
+        ],
         push_constant_ranges: &[],
     });
 

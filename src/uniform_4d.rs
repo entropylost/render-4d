@@ -1,5 +1,5 @@
-use crate::world::WorldSize;
 use crate::camera_4d::CameraInternal;
+use crate::world::WorldSize;
 use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
 use wgpu::*;
@@ -13,7 +13,6 @@ pub struct Uniforms {
 
 pub struct UniformBuffer(pub Buffer);
 pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
-
 
 pub fn init_uniforms(mut commands: Commands, device: Res<Device>, world_size: Res<WorldSize>) {
     let buffer = device.create_buffer(&BufferDescriptor {
@@ -45,7 +44,7 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>, world_size: Re
     });
     commands.insert_resource(Uniforms {
         camera: Default::default(),
-        world_size: world_size.0,
+        world_size: world_size.0 + 2,
     });
     commands.insert_resource(UniformBuffer(buffer));
     commands.insert_resource(UniformBindGroup(bind_group, bind_group_layout));
@@ -60,4 +59,3 @@ pub fn update_uniform_buffer(
         queue.write_buffer(&buffer.0, 0, bytemuck::cast_slice(&[*uniforms]));
     }
 }
-

@@ -5,6 +5,7 @@ use crate::VoxelType;
 use arrayvec::ArrayVec;
 use bevy::prelude::*;
 use nalgebra::Vector4;
+use ndarray::s;
 use ndarray::Array4;
 use std::num::NonZeroU32;
 use std::ops::Index;
@@ -23,14 +24,26 @@ pub struct World {
 
 impl World {
     pub fn new(size: u32) -> World {
-        let size = size as usize;
+        let size = size as usize + 2;
 
         let mut types = ArrayVec::new();
         let mut types_internal = ArrayVec::new();
         types.push(VoxelType::default());
+        types.push(VoxelType::default());
         types_internal.push(types[0].to_internal());
+        types_internal.push(types[1].to_internal());
+
+        let mut voxels = Array4::from_elem((size, size, size, size), VoxelId(1));
+        voxels
+            .slice_mut(s![
+                1..(size - 1),
+                1..(size - 1),
+                1..(size - 1),
+                1..(size - 1)
+            ])
+            .fill(VoxelId(0));
         World {
-            voxels: Array4::from_elem((size, size, size, size), VoxelId(0)),
+            voxels,
             types,
             types_internal,
         }
@@ -43,16 +56,20 @@ impl World {
         VoxelId(id as u8)
     }
 
-    pub fn air(&mut self) -> VoxelId {
+    pub fn air() -> VoxelId {
         VoxelId(0)
     }
 
-    pub fn size(&self) -> u32 {
-        self.voxels.shape()[0] as u32
+    pub fn solid_air() -> VoxelId {
+        VoxelId(1)
     }
 
-    pub fn texture_layout(&self) -> ImageDataLayout {
-        let size = self.size();
+    pub fn size(&self) -> u32 {
+        self.voxels.shape()[0] as u32 - 2
+    }
+
+    fn texture_layout(&self) -> ImageDataLayout {
+        let size = self.size() + 2;
         ImageDataLayout {
             offset: 0,
             bytes_per_row: NonZeroU32::new(size),
@@ -60,11 +77,11 @@ impl World {
         }
     }
 
-    pub fn voxel_bytes(&self) -> &[u8] {
+    fn voxel_bytes(&self) -> &[u8] {
         bytemuck::cast_slice(self.voxels.as_slice().unwrap())
     }
 
-    pub fn types_internal(&self) -> [VoxelTypeInternal; 256] {
+    fn types_internal(&self) -> [VoxelTypeInternal; 256] {
         let mut out = [Default::default(); 256];
         out[..self.types.len()].clone_from_slice(&self.types_internal);
         out
@@ -74,14 +91,22 @@ impl World {
 impl Index<Vector4<u32>> for World {
     type Output = VoxelId;
     fn index(&self, index: Vector4<u32>) -> &Self::Output {
-        let index = index.cast::<usize>();
-        &self.voxels[[index.x, index.y, index.z, index.w]]
+        let index = index.cast::<usize>() + Vector4::repeat(1);
+        let out = &self.voxels[[index.x, index.y, index.z, index.w]];
+        if *out == Self::solid_air() {
+            panic!("Out of bounds");
+        }
+        out
     }
 }
 impl IndexMut<Vector4<u32>> for World {
     fn index_mut(&mut self, index: Vector4<u32>) -> &mut Self::Output {
-        let index = index.cast::<usize>();
-        &mut self.voxels[[index.x, index.y, index.z, index.w]]
+        let index = index.cast::<usize>() + Vector4::repeat(1);
+        let out = &mut self.voxels[[index.x, index.y, index.z, index.w]];
+        if *out == Self::solid_air() {
+            panic!("Out of bounds");
+        }
+        out
     }
 }
 
@@ -92,6 +117,8 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
     let size = size.0;
 
     let world = World::new(size);
+
+    let size = size + 2;
 
     let extent = Extent3d {
         width: size,

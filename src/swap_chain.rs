@@ -28,7 +28,7 @@ pub fn init_swap_chain(
             label: Some("device"),
             features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
             limits: Limits {
-                max_texture_dimension_3d: world_size.0 * world_size.0,
+                max_texture_dimension_3d: (world_size.0 + 2) * (world_size.0 + 2),
                 ..Default::default()
             },
         },

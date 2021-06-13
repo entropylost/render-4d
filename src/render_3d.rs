@@ -1,5 +1,5 @@
-use crate::utils::to_u32_array;
 use crate::uniform_3d::UniformBindGroup;
+use crate::utils::to_u32_array;
 use crate::view::View3dBindGroup;
 use bevy::prelude::*;
 use bytemuck::cast_slice;

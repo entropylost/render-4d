@@ -24,11 +24,11 @@ mod render_4d;
 mod swap_chain;
 mod uniform_3d;
 mod uniform_4d;
+mod utils;
 mod view;
 mod voxel;
 mod window_size;
 mod world;
-mod utils;
 
 fn main() {
     let mut app = App::build();
@@ -39,14 +39,14 @@ fn main() {
         vsync: false,
         ..Default::default()
     })
-    .insert_resource(WorldSize(32))
-    .insert_resource(ViewSize(64))
-    .insert_resource(camera_3d::Camera::new(Vector3::new(-4.0, -4.0, -4.0), 0.0))
+    .insert_resource(WorldSize(64))
+    .insert_resource(ViewSize(128))
+    .insert_resource(camera_3d::Camera::new(Vector3::new(4.0, 4.0, 4.0), 0.0))
     .insert_resource(camera_4d::Camera::new());
     app.add_plugins(DefaultPlugins)
-        // .add_plugin(DiagnosticsPlugin)
-        // .add_plugin(LogDiagnosticsPlugin::default())
-        // .add_plugin(FrameTimeDiagnosticsPlugin)
+        .add_plugin(DiagnosticsPlugin)
+        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin)
         .add_plugin(camera_3d::CameraPlugin)
         .add_plugin(camera_4d::CameraPlugin);
     app.add_startup_stage_after(

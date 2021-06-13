@@ -77,7 +77,7 @@ impl Camera {
     fn to_internal(&self, world_size: WorldSize) -> CameraInternal {
         let rotation = *self.rotation.matrix();
         CameraInternal {
-            position: Vector4::repeat(world_size.0 as f32 / 2.0)
+            position: Vector4::repeat(world_size.0 as f32 / 2.0 + 1.0)
                 - rotation * Vector4::new(0.0, 0.0, 0.0, 1.0) * world_size.0 as f32 * 2.0,
             rotation,
             voxel_size: 1.0, // TODO

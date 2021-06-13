@@ -43,7 +43,7 @@ VoxelType get_voxel(ivec3 location) {
 }
 
 bool contains_voxel(ivec3 location) {
-    return texelFetch(usampler3D(t_view, s_view), location, 0).x != 0;
+    return texelFetch(usampler3D(t_view, s_view), location, 0).x != 1;
 }
 
 
