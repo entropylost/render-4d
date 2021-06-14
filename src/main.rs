@@ -19,6 +19,7 @@ use palette::Srgb;
 
 mod camera_3d;
 mod camera_4d;
+mod physics;
 mod render_3d;
 mod render_4d;
 mod swap_chain;
