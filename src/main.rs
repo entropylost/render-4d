@@ -2,6 +2,7 @@
 
 use crate::physics::PhysicsPlugin;
 use crate::physics::PhysicsView;
+use crate::physics::Player;
 use crate::swap_chain::init_swap_chain;
 use crate::swap_chain::update_swap_chain;
 use crate::view::init_view;
@@ -45,6 +46,7 @@ fn main() {
     .insert_resource(WorldSize(88))
     .insert_resource(ViewSize(128))
     .insert_resource(PhysicsView::new(5))
+    .insert_resource(Player::new(Vector3::new(8.0, 8.0, 8.0), 1.0, 1.0, 1.0))
     .insert_resource(camera_3d::Camera::new(Vector3::new(4.0, 4.0, 4.0), 0.0))
     .insert_resource(camera_4d::Camera::new());
     app.add_startup_stage_after(

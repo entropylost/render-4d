@@ -13,8 +13,19 @@ pub struct Player {
     position: Vector3<f32>,
     velocity: Vector3<f32>,
     air_friction: f32,
-    accelleration: f32,
-    size: u32,
+    acceleration: f32,
+    size: f32,
+}
+impl Player {
+    pub fn new(position: Vector3<f32>, air_friction: f32, acceleration: f32, size: f32) -> Self {
+        Self {
+            position,
+            velocity: Vector3::zeros(),
+            air_friction,
+            acceleration,
+            size,
+        }
+    }
 }
 
 pub struct PhysicsViewStagingBuffer(Buffer);
