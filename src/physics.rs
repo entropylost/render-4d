@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use nalgebra::Vector3;
 use ndarray::Array3;
 use std::num::NonZeroU32;
+use std::ops::Deref;
 use wgpu::*;
 
 pub struct Player {
@@ -20,6 +21,16 @@ pub struct PhysicsView {
     next_start: Vector3<u32>,
     voxels: Array3<VoxelId>,
     size: u32,
+}
+impl PhysicsView {
+    pub fn new(size: u32) -> Self {
+        Self {
+            start: Vector3::zeros(),
+            next_start: Vector3::zeros(),
+            voxels: Array3::from_elem((0, 0, 0), VoxelId(0)),
+            size,
+        }
+    }
 }
 
 pub struct PhysicsPlugin;
@@ -39,7 +50,7 @@ impl PhysicsPlugin {
                 label: Some("physics-view-staging-buffer"),
                 size: (size_rounded * size_rounded * physics_view.size) as u64,
                 usage: BufferUsage::MAP_READ | BufferUsage::COPY_DST,
-                mapped_at_creation: false,
+                mapped_at_creation: true,
             },
         )));
     }
@@ -52,8 +63,11 @@ impl PhysicsPlugin {
         view_texture: Res<ViewTexture>,
     ) {
         let buffer = &staging_buffer.0;
-        let data = Box::from(buffer.slice(..).get_mapped_range());
-        println!("{:?}", data);
+        {
+            let data = Box::<[u8]>::from(buffer.slice(..).get_mapped_range().deref());
+            println!("{:?}", data);
+        }
+        buffer.unmap();
 
         let size_rounded = ((physics_view.size + 255) / 256) * 256;
 
@@ -86,5 +100,16 @@ impl PhysicsPlugin {
         );
         queue.submit(std::iter::once(encoder.finish()));
         let _ = buffer.slice(..).map_async(MapMode::Read);
+    }
+}
+
+impl Plugin for PhysicsPlugin {
+    fn build(&self, app: &mut AppBuilder) {
+        app.add_startup_system_to_stage("startup-finish", Self::init_staging_buffer.system())
+            .add_stage_after(
+                CoreStage::Update,
+                "physics",
+                SystemStage::single_threaded().with_system(Self::update_view.system()),
+            );
     }
 }

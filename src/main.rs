@@ -1,5 +1,7 @@
 #![feature(div_duration)]
 
+use crate::physics::PhysicsPlugin;
+use crate::physics::PhysicsView;
 use crate::swap_chain::init_swap_chain;
 use crate::swap_chain::update_swap_chain;
 use crate::view::init_view;
@@ -42,14 +44,9 @@ fn main() {
     })
     .insert_resource(WorldSize(88))
     .insert_resource(ViewSize(128))
+    .insert_resource(PhysicsView::new(5))
     .insert_resource(camera_3d::Camera::new(Vector3::new(4.0, 4.0, 4.0), 0.0))
     .insert_resource(camera_4d::Camera::new());
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(DiagnosticsPlugin)
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(camera_3d::CameraPlugin)
-        .add_plugin(camera_4d::CameraPlugin);
     app.add_startup_stage_after(
         StartupStage::Startup,
         "startup-swap-chain",
@@ -70,6 +67,13 @@ fn main() {
         "startup-finish",
         SystemStage::single_threaded(),
     );
+    app.add_plugins(DefaultPlugins)
+        .add_plugin(DiagnosticsPlugin)
+        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin)
+        .add_plugin(camera_3d::CameraPlugin)
+        .add_plugin(camera_4d::CameraPlugin)
+        .add_plugin(PhysicsPlugin);
     app.add_startup_system(init_window_size.system())
         .add_startup_system_to_stage("startup-swap-chain", init_swap_chain.system())
         .add_startup_system_to_stage("startup-bind-groups", uniform_4d::init_uniforms.system())
