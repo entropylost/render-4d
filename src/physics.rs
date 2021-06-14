@@ -2,7 +2,9 @@ use crate::view::ViewTexture;
 use crate::voxel::VoxelId;
 use bevy::prelude::*;
 use nalgebra::Vector3;
+use ndarray::s;
 use ndarray::Array3;
+use ndarray::ArrayView3;
 use std::num::NonZeroU32;
 use std::ops::Deref;
 use wgpu::*;
@@ -59,17 +61,32 @@ impl PhysicsPlugin {
         device: Res<Device>,
         queue: Res<Queue>,
         staging_buffer: Res<PhysicsViewStagingBuffer>,
-        physics_view: Res<PhysicsView>,
+        mut physics_view: ResMut<PhysicsView>,
+        player: Res<Player>,
         view_texture: Res<ViewTexture>,
     ) {
+        let size = physics_view.size;
+        let size_rounded = ((size + 255) / 256) * 256;
+
         let buffer = &staging_buffer.0;
         {
-            let data = Box::<[u8]>::from(buffer.slice(..).get_mapped_range().deref());
-            println!("{:?}", data);
+            let slice = buffer.slice(..).get_mapped_range();
+            let data = bytemuck::cast_slice::<_, VoxelId>(slice.deref());
+            let data = ArrayView3::from_shape(
+                (size_rounded as usize, size_rounded as usize, size as usize),
+                data,
+            )
+            .unwrap();
+            physics_view.voxels = data
+                .slice(s![0..size as usize, 0..size as usize, ..])
+                .to_owned();
+            physics_view.start = physics_view.next_start;
+            println!("{:?}", physics_view.voxels);
         }
         buffer.unmap();
 
-        let size_rounded = ((physics_view.size + 255) / 256) * 256;
+        physics_view.next_start =
+            (player.position - Vector3::repeat(size).cast() / 2.0).map(|x| x.round() as u32);
 
         let mut encoder = device.create_command_encoder(&CommandEncoderDescriptor {
             label: Some("physics-view-update-encoder"),
@@ -93,9 +110,9 @@ impl PhysicsPlugin {
                 },
             },
             Extent3d {
-                width: physics_view.size,
-                height: physics_view.size,
-                depth_or_array_layers: physics_view.size,
+                width: size,
+                height: size,
+                depth_or_array_layers: size,
             },
         );
         queue.submit(std::iter::once(encoder.finish()));

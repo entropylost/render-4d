@@ -40,3 +40,13 @@ unsafe impl Pod for VoxelTypeInternal {}
 #[repr(transparent)]
 #[derive(Pod, Zeroable, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct VoxelId(pub u8);
+
+impl VoxelId {
+    pub fn air() -> Self {
+        Self(0)
+    }
+
+    pub fn solid_air() -> Self {
+        Self(1)
+    }
+}

@@ -56,14 +56,6 @@ impl World {
         VoxelId(id as u8)
     }
 
-    pub fn air() -> VoxelId {
-        VoxelId(0)
-    }
-
-    pub fn solid_air() -> VoxelId {
-        VoxelId(1)
-    }
-
     pub fn size(&self) -> u32 {
         self.voxels.shape()[0] as u32 - 2
     }
@@ -93,7 +85,7 @@ impl Index<Vector4<u32>> for World {
     fn index(&self, index: Vector4<u32>) -> &Self::Output {
         let index = index.cast::<usize>() + Vector4::repeat(1);
         let out = &self.voxels[[index.x, index.y, index.z, index.w]];
-        if *out == Self::solid_air() {
+        if *out == VoxelId::solid_air() {
             panic!("Out of bounds");
         }
         out
@@ -103,7 +95,7 @@ impl IndexMut<Vector4<u32>> for World {
     fn index_mut(&mut self, index: Vector4<u32>) -> &mut Self::Output {
         let index = index.cast::<usize>() + Vector4::repeat(1);
         let out = &mut self.voxels[[index.x, index.y, index.z, index.w]];
-        if *out == Self::solid_air() {
+        if *out == VoxelId::solid_air() {
             panic!("Out of bounds");
         }
         out
