@@ -71,10 +71,10 @@ impl Camera {
             interpolate: f,
             start_time: Instant::now(),
         });
-        return true;
+        true
     }
 
-    fn to_internal(&self, world_size: WorldSize) -> CameraInternal {
+    fn to_internal(self, world_size: WorldSize) -> CameraInternal {
         let rotation = *self.rotation.matrix();
         CameraInternal {
             position: Vector4::repeat(world_size.0 as f32 / 2.0 + 1.0)
@@ -87,6 +87,7 @@ impl Camera {
 }
 
 fn r1(t: f32) -> Rotation4<f32> {
+    #[allow(clippy::float_cmp)]
     if t == 1.0 {
         #[rustfmt::skip]
         let rot = Matrix4::new(
@@ -109,6 +110,7 @@ fn r1(t: f32) -> Rotation4<f32> {
     }
 }
 fn r2(t: f32) -> Rotation4<f32> {
+    #[allow(clippy::float_cmp)]
     if t == 1.0 {
         #[rustfmt::skip]
         let rot = Matrix4::new(
@@ -166,6 +168,7 @@ impl CameraPlugin {
                 .div_duration_f32(camera.rotate_time)
                 .min(1.0);
             camera.rotation = (rotating.interpolate)(t) * rotating.last_rotation;
+            #[allow(clippy::float_cmp)]
             if t == 1.0 {
                 print_mat4(*camera.rotation.matrix());
                 println!("X -> {:?}", camera.rotation * Vector4::x());

@@ -75,6 +75,7 @@ impl PhysicsView {
                 ) + self.start.cast();
                 let diff_s = start - (pos + Vector3::repeat(1.0));
                 let diff_e = start + size - pos;
+                #[allow(clippy::neg_cmp_op_on_partial_ord)]
                 if !(diff_s < Vector3::zeros()) || !(diff_e > Vector3::zeros()) {
                     return prev;
                 }
@@ -93,12 +94,10 @@ impl PhysicsView {
         let shift = min_shift.zip_zip_map(&max_shift, &conflicted, |a, b, c| {
             if c {
                 0.0
+            } else if a == 0.0 {
+                b
             } else {
-                if a == 0.0 {
-                    b
-                } else {
-                    a
-                }
+                a
             }
         });
         CollisionResult {
