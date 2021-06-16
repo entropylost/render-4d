@@ -1,3 +1,4 @@
+use crate::camera_3d::Camera;
 use crate::view::ViewTexture;
 use crate::voxel::VoxelId;
 use bevy::prelude::*;
@@ -9,21 +10,29 @@ use std::num::NonZeroU32;
 use std::ops::Deref;
 use wgpu::*;
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Player {
     position: Vector3<f32>,
     velocity: Vector3<f32>,
-    air_friction: f32,
-    acceleration: f32,
-    size: f32,
+    stats: PlayerStats,
+    dead: bool,
 }
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct PlayerStats {
+    pub air_friction: f32,
+    pub movement_acceleration: f32,
+    pub jump_velocity: f32,
+    pub size: Vector3<f32>,
+    pub gravity: f32,
+}
+
 impl Player {
-    pub fn new(position: Vector3<f32>, air_friction: f32, acceleration: f32, size: f32) -> Self {
+    pub fn new(position: Vector3<f32>, stats: PlayerStats) -> Self {
         Self {
             position,
             velocity: Vector3::zeros(),
-            air_friction,
-            acceleration,
-            size,
+            stats,
+            dead: false,
         }
     }
 }
@@ -35,6 +44,14 @@ pub struct PhysicsView {
     voxels: Array3<VoxelId>,
     size: u32,
 }
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+struct CollisionResult {
+    shift: Vector3<f32>,
+    collided: bool,
+    conflicted: Vector3<bool>,
+}
+
 impl PhysicsView {
     pub fn new(size: u32) -> Self {
         Self {
@@ -44,13 +61,54 @@ impl PhysicsView {
             size,
         }
     }
+    fn aabb_collide(&self, start: Vector3<f32>, size: Vector3<f32>) -> CollisionResult {
+        let (min_shift, max_shift) = self.voxels.indexed_iter().fold(
+            (Vector3::<f32>::zeros(), Vector3::<f32>::zeros()),
+            |prev, current| {
+                if *current.1 == VoxelId::solid_air() {
+                    return prev;
+                }
+                let pos = Vector3::new(
+                    current.0 .0 as f32,
+                    current.0 .1 as f32,
+                    current.0 .2 as f32,
+                ) + self.start.cast();
+                let diff_s = start - (pos + Vector3::repeat(1.0));
+                let diff_e = start + size - pos;
+                if !(diff_s < Vector3::zeros()) || !(diff_e > Vector3::zeros()) {
+                    return prev;
+                }
+                let min_abs = diff_s.zip_map(&diff_e, |a, b| if -a > b { b } else { a });
+                (
+                    prev.0.zip_map(&min_abs, |a, b| a.min(b)),
+                    prev.1.zip_map(&min_abs, |a, b| a.max(b)),
+                )
+            },
+        );
+        let collided = min_shift != Vector3::zeros() || max_shift != Vector3::zeros();
+        let conflicted = min_shift.zip_map(&max_shift, |a, b| (a != 0.0) && (b != 0.0));
+        let shift = min_shift.zip_zip_map(&max_shift, &conflicted, |a, b, c| {
+            if c {
+                0.0
+            } else {
+                if a == 0.0 {
+                    b
+                } else {
+                    a
+                }
+            }
+        });
+        CollisionResult {
+            shift,
+            collided,
+            conflicted,
+        }
+    }
 }
 
 pub struct PhysicsPlugin;
 
 impl PhysicsPlugin {
-    fn collide_player(player: ResMut<Player>, view: Res<PhysicsView>) {}
-
     fn init_staging_buffer(
         mut commands: Commands,
         device: Res<Device>,
@@ -66,6 +124,43 @@ impl PhysicsPlugin {
                 mapped_at_creation: true,
             },
         )));
+    }
+
+    fn update_physics(time: Res<Time>, mut player: ResMut<Player>, view: Res<PhysicsView>) {
+        println!("Position: {:?}", player.position);
+        println!("Dead: {:?}", player.dead);
+        if player.dead {
+            return;
+        }
+        let timestep = time.delta_seconds();
+        let stats = player.stats;
+        let acceleration = -stats.gravity * Vector3::z() - stats.air_friction * player.velocity;
+        player.velocity += acceleration * timestep;
+        let velocity = player.velocity;
+        player.position += velocity * timestep;
+        let collision = view.aabb_collide(player.position - stats.size, stats.size * 2.0);
+        if !collision.collided {
+            return;
+        }
+        if collision.conflicted.fold(true, |x, a| a & x) {
+            player.dead = true;
+            return;
+        }
+        // TODO: WALKING UP STAIRS
+        player.position += collision.shift;
+        player
+            .velocity
+            .component_mul_assign(&collision.shift.map(|x| if x == 0.0 { 1.0 } else { 0.0 }));
+        if view
+            .aabb_collide(player.position - stats.size, stats.size * 2.0)
+            .collided
+        {
+            player.dead = true;
+        }
+    }
+
+    fn update_camera(player: Res<Player>, mut camera: ResMut<Camera>) {
+        camera.position = player.position;
     }
 
     fn update_view(
@@ -92,7 +187,6 @@ impl PhysicsPlugin {
                 .slice(s![0..size as usize, 0..size as usize, ..])
                 .to_owned();
             physics_view.start = physics_view.next_start;
-            println!("{:?}", physics_view.voxels);
         }
         buffer.unmap();
 
@@ -137,7 +231,10 @@ impl Plugin for PhysicsPlugin {
             .add_stage_after(
                 CoreStage::Update,
                 "physics",
-                SystemStage::single_threaded().with_system(Self::update_view.system()),
+                SystemStage::single_threaded()
+                    .with_system(Self::update_view.system())
+                    .with_system(Self::update_physics.system())
+                    .with_system(Self::update_camera.system()),
             );
     }
 }
