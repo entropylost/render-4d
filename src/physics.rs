@@ -65,7 +65,7 @@ impl PhysicsView {
         let (min_shift, max_shift) = self.voxels.indexed_iter().fold(
             (Vector3::<f32>::zeros(), Vector3::<f32>::zeros()),
             |prev, current| {
-                if *current.1 == VoxelId::solid_air() {
+                if *current.1 == VoxelId::solid_air() || *current.1 == VoxelId::air() {
                     return prev;
                 }
                 let pos = Vector3::new(
@@ -78,6 +78,9 @@ impl PhysicsView {
                 if !(diff_s < Vector3::zeros()) || !(diff_e > Vector3::zeros()) {
                     return prev;
                 }
+                println!("Collision position: {:?}", pos);
+                println!("Collided: {:?}, {:?}", diff_s, diff_e);
+                println!("Voxel: {:?}", current.1);
                 let min_abs = diff_s.zip_map(&diff_e, |a, b| if -a > b { b } else { a });
                 (
                     prev.0.zip_map(&min_abs, |a, b| a.min(b)),
@@ -128,17 +131,23 @@ impl PhysicsPlugin {
 
     fn update_physics(time: Res<Time>, mut player: ResMut<Player>, view: Res<PhysicsView>) {
         println!("Position: {:?}", player.position);
-        println!("Dead: {:?}", player.dead);
+        // println!("Dead: {:?}", player.dead);
         if player.dead {
             return;
         }
         let timestep = time.delta_seconds();
+        if timestep > 1.0 {
+            // Hack to fix the first timestep.
+            return;
+        }
         let stats = player.stats;
         let acceleration = -stats.gravity * Vector3::z() - stats.air_friction * player.velocity;
         player.velocity += acceleration * timestep;
         let velocity = player.velocity;
+        // println!("Velocity: {:?}", velocity);
         player.position += velocity * timestep;
         let collision = view.aabb_collide(player.position - stats.size, stats.size * 2.0);
+        // println!("Collision: {:?}", collision);
         if !collision.collided {
             return;
         }
@@ -160,6 +169,7 @@ impl PhysicsPlugin {
     }
 
     fn update_camera(player: Res<Player>, mut camera: ResMut<Camera>) {
+        // println!("Camera position: {:?}", camera.position);
         camera.position = player.position;
     }
 

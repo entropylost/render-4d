@@ -48,7 +48,7 @@ fn main() {
     .insert_resource(ViewSize(128))
     .insert_resource(PhysicsView::new(5))
     .insert_resource(Player::new(
-        Vector3::new(8.0, 8.0, 8.0),
+        Vector3::new(20.0, 20.0, 55.0),
         PlayerStats {
             air_friction: 1.0,
             movement_acceleration: 1.0,
@@ -132,11 +132,11 @@ fn main() {
 fn init_world_data(mut world: ResMut<World>) {
     let normal_type = world.insert_type(VoxelType::new(Srgb::new(0.212, 0.247, 0.278)));
 
-    for i in 8..30 {
-        for j in 8..24 {
-            for k in 8..13 {
-                for l in 5..26 {
-                    world[Vector4::new(i, j, k, l)] = normal_type;
+    for x in 10..40 {
+        for y in 10..40 {
+            for z in 10..40 {
+                for w in 10..40 {
+                    world[Vector4::new(x, y, z, w)] = normal_type;
                 }
             }
         }
