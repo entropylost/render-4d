@@ -70,9 +70,9 @@ impl PhysicsView {
                     return prev;
                 }
                 let pos = Vector3::new(
-                    current.0 .0 as f32,
-                    current.0 .1 as f32,
                     current.0 .2 as f32,
+                    current.0 .1 as f32,
+                    current.0 .0 as f32,
                 ) + self.start.cast();
                 let diff_s = start - (pos + Vector3::repeat(1.0));
                 let diff_e = start + size - pos;
@@ -161,7 +161,7 @@ impl PhysicsPlugin {
             return;
         }
         // TODO: WALKING UP STAIRS
-        player.position += collision.shift;
+        player.position += collision.shift * -1.01;
         player
             .velocity
             .component_mul_assign(&collision.shift.map(|x| if x == 0.0 { 1.0 } else { 0.0 }));
