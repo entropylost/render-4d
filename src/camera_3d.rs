@@ -31,20 +31,14 @@ pub struct CameraInternal {
     _padding_2: [f32; 3],
 }
 
-impl Default for Camera {
-    fn default() -> Self {
-        Self::new(Vector3::zeros(), 0.0)
-    }
-}
-
 impl Camera {
-    pub fn new(position: Vector3<f32>, x: f32) -> Camera {
+    pub fn new() -> Camera {
         let pitch_range = 0.01..=(PI - 0.01);
         Camera {
-            x,
+            x: 0.0,
             y: (pitch_range.start() + pitch_range.end()) / 2.0,
             pitch_range,
-            position,
+            position: Vector3::zeros(),
             fov: 1.0,
             sensitivity: 1.0,
             speed: 5.0,

@@ -46,18 +46,18 @@ fn main() {
     })
     .insert_resource(WorldSize(88))
     .insert_resource(ViewSize(128))
-    .insert_resource(PhysicsView::new(5))
+    .insert_resource(PhysicsView::new(10))
     .insert_resource(Player::new(
         Vector3::new(20.0, 20.0, 55.0),
         PlayerStats {
             air_friction: 1.0,
-            movement_acceleration: 1.0,
+            movement_acceleration: 15.0,
             jump_velocity: 1.0,
-            size: Vector3::repeat(1.0),
+            size: Vector3::repeat(2.0),
             gravity: 1.0,
         },
     ))
-    .insert_resource(camera_3d::Camera::new(Vector3::new(4.0, 4.0, 4.0), 0.0))
+    .insert_resource(camera_3d::Camera::new())
     .insert_resource(camera_4d::Camera::new());
     app.add_startup_stage_after(
         StartupStage::Startup,

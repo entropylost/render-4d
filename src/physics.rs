@@ -2,6 +2,7 @@ use crate::camera_3d::Camera;
 use crate::view::ViewTexture;
 use crate::voxel::VoxelId;
 use bevy::prelude::*;
+use nalgebra::UnitQuaternion;
 use nalgebra::Vector3;
 use ndarray::s;
 use ndarray::Array3;
@@ -65,7 +66,7 @@ impl PhysicsView {
         let (min_shift, max_shift) = self.voxels.indexed_iter().fold(
             (Vector3::<f32>::zeros(), Vector3::<f32>::zeros()),
             |prev, current| {
-                if *current.1 == VoxelId::solid_air() || *current.1 == VoxelId::air() {
+                if *current.1 == VoxelId::solid_air() {
                     return prev;
                 }
                 let pos = Vector3::new(
@@ -79,9 +80,9 @@ impl PhysicsView {
                 if !(diff_s < Vector3::zeros()) || !(diff_e > Vector3::zeros()) {
                     return prev;
                 }
-                println!("Collision position: {:?}", pos);
-                println!("Collided: {:?}, {:?}", diff_s, diff_e);
-                println!("Voxel: {:?}", current.1);
+                // println!("Collision position: {:?}", pos);
+                // println!("Collided: {:?}, {:?}", diff_s, diff_e);
+                // println!("Voxel: {:?}", current.1);
                 let min_abs = diff_s.zip_map(&diff_e, |a, b| if -a > b { b } else { a });
                 (
                     prev.0.zip_map(&min_abs, |a, b| a.min(b)),
@@ -128,28 +129,33 @@ impl PhysicsPlugin {
         )));
     }
 
-    fn update_physics(time: Res<Time>, mut player: ResMut<Player>, view: Res<PhysicsView>) {
-        println!("Position: {:?}", player.position);
-        // println!("Dead: {:?}", player.dead);
+    fn update_physics(
+        time: Res<Time>,
+        mut player: ResMut<Player>,
+        view: Res<PhysicsView>,
+        key: Res<Input<KeyCode>>,
+        camera: Res<Camera>,
+    ) {
         if player.dead {
             return;
         }
+        println!("Position: {:?}", player.position);
         let timestep = time.delta_seconds();
         if timestep > 1.0 {
             // Hack to fix the first timestep.
             return;
         }
         let stats = player.stats;
-        let acceleration = -stats.gravity * Vector3::z() - stats.air_friction * player.velocity;
+        let acceleration = -stats.gravity * Vector3::z() - stats.air_friction * player.velocity
+            + Self::calculate_movement(key, camera) * stats.movement_acceleration;
         player.velocity += acceleration * timestep;
         let velocity = player.velocity;
-        // println!("Velocity: {:?}", velocity);
         player.position += velocity * timestep;
         let collision = view.aabb_collide(player.position - stats.size, stats.size * 2.0);
-        // println!("Collision: {:?}", collision);
         if !collision.collided {
             return;
         }
+        println!("Collision: {:?}", collision);
         if collision.conflicted.fold(true, |x, a| a & x) {
             player.dead = true;
             return;
@@ -159,16 +165,38 @@ impl PhysicsPlugin {
         player
             .velocity
             .component_mul_assign(&collision.shift.map(|x| if x == 0.0 { 1.0 } else { 0.0 }));
-        if view
-            .aabb_collide(player.position - stats.size, stats.size * 2.0)
-            .collided
-        {
-            player.dead = true;
+        // if view
+        //     .aabb_collide(player.position - stats.size, stats.size * 2.0)
+        //     .collided
+        // {
+        //     player.dead = true;
+        // }
+    }
+
+    fn calculate_movement(key: Res<Input<KeyCode>>, camera: Res<Camera>) -> Vector3<f32> {
+        let mut delta = Vector3::<f32>::zeros();
+
+        if key.pressed(KeyCode::W) {
+            delta += Vector3::x();
+        }
+        if key.pressed(KeyCode::S) {
+            delta -= Vector3::x();
+        }
+        if key.pressed(KeyCode::D) {
+            delta -= Vector3::y();
+        }
+        if key.pressed(KeyCode::A) {
+            delta += Vector3::y();
+        }
+        if delta != Vector3::zeros() {
+            delta.normalize_mut();
+            UnitQuaternion::from_axis_angle(&Vector3::z_axis(), camera.x) * delta
+        } else {
+            Vector3::zeros()
         }
     }
 
     fn update_camera(player: Res<Player>, mut camera: ResMut<Camera>) {
-        // println!("Camera position: {:?}", camera.position);
         camera.position = player.position;
     }
 
@@ -186,15 +214,17 @@ impl PhysicsPlugin {
         let buffer = &staging_buffer.0;
         {
             let slice = buffer.slice(..).get_mapped_range();
+            // println!("{:?}", slice.deref());
             let data = bytemuck::cast_slice::<_, VoxelId>(slice.deref());
             let data = ArrayView3::from_shape(
-                (size_rounded as usize, size_rounded as usize, size as usize),
+                (size as usize, size_rounded as usize, size_rounded as usize),
                 data,
             )
             .unwrap();
             physics_view.voxels = data
-                .slice(s![0..size as usize, 0..size as usize, ..])
+                .slice(s![.., 0..size as usize, 0..size as usize])
                 .to_owned();
+            // println!("Data: {:?}", physics_view.voxels);
             physics_view.start = physics_view.next_start;
         }
         buffer.unmap();
