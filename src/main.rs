@@ -115,10 +115,19 @@ fn main() {
 fn init_world_data(mut world: ResMut<World>) {
     let normal_type = world.insert_type(VoxelType::new(Srgb::new(0.212, 0.247, 0.278)));
 
-    for i in 10..56 {
-        for j in 32..60 {
-            for k in 16..25 {
+    for i in 10..40 {
+        for j in 35..60 {
+            for k in 35..55 {
                 for l in 10..75 {
+                    world[Vector4::new(i, j, k, l)] = normal_type;
+                }
+            }
+        }
+    }
+    for i in 20..70 {
+        for j in 16..40 {
+            for k in 16..25 {
+                for l in 16..40 {
                     world[Vector4::new(i, j, k, l)] = normal_type;
                 }
             }
