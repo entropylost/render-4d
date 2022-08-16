@@ -15,11 +15,12 @@ pub fn init_swap_chain(
     let window = winit_windows
         .get_window(windows.get_primary().unwrap().id())
         .unwrap();
-    let instance = Instance::new(BackendBit::all());
+    let instance = Instance::new(Backends::all());
     let surface = unsafe { instance.create_surface(window) };
     let adapter = block_on(instance.request_adapter(&RequestAdapterOptions {
         power_preference: PowerPreference::HighPerformance,
         compatible_surface: Some(&surface),
+        force_fallback_adapter: false,
     }))
     .expect("Failed to find an appropriate adapter");
 
@@ -37,7 +38,7 @@ pub fn init_swap_chain(
     .expect("Failed to create device");
 
     let sc_desc = SwapChainDescriptor {
-        usage: TextureUsage::RENDER_ATTACHMENT,
+        usage: TextureUsages::RENDER_ATTACHMENT,
         format: adapter.get_swap_chain_preferred_format(&surface).unwrap(),
         width: window_size.0.x,
         height: window_size.0.y,

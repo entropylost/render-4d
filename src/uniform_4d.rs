@@ -5,12 +5,13 @@ use bytemuck::{Pod, Zeroable};
 use wgpu::*;
 
 #[repr(C)]
-#[derive(Pod, Zeroable, Clone, Copy, Debug)]
+#[derive(Resource, Pod, Zeroable, Clone, Copy, Debug)]
 pub struct Uniforms {
     pub camera: CameraInternal,
     world_size: u32,
 }
 
+#[derive(Resource)]
 pub struct UniformBuffer(pub Buffer);
 pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
@@ -18,14 +19,14 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>, world_size: Re
     let buffer = device.create_buffer(&BufferDescriptor {
         label: Some("uniform-4d-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
-        usage: BufferUsage::UNIFORM | BufferUsage::COPY_DST,
+        usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("uniform-4d-bind-group-layout"),
         entries: &[BindGroupLayoutEntry {
             binding: 0,
-            visibility: ShaderStage::COMPUTE,
+            visibility: ShaderStages::COMPUTE,
             ty: BindingType::Buffer {
                 ty: BufferBindingType::Uniform,
                 has_dynamic_offset: false,

@@ -12,10 +12,10 @@ use std::ops::Index;
 use std::ops::IndexMut;
 use wgpu::*;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Resource, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct WorldSize(pub u32);
 
-#[derive(Debug, Clone)]
+#[derive(Resource, Debug, Clone)]
 pub struct World {
     voxels: Array4<VoxelId>,
     types: ArrayVec<VoxelType, 256>,
@@ -110,6 +110,7 @@ impl IndexMut<Vector4<u32>> for World {
     }
 }
 
+#[derive(Resource)]
 pub struct WorldTexture(pub Texture, pub Extent3d);
 pub struct WorldBindGroup(pub BindGroup, pub BindGroupLayout);
 
@@ -133,7 +134,7 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsage::SAMPLED | TextureUsage::COPY_DST,
+        usage: TextureUsages::SAMPLED | TextureUsages::COPY_DST,
     });
     let view = texture.create_view(&TextureViewDescriptor::default());
     let sampler = device.create_sampler(&SamplerDescriptor {
@@ -148,7 +149,7 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
         entries: &[
             BindGroupLayoutEntry {
                 binding: 0,
-                visibility: ShaderStage::COMPUTE,
+                visibility: ShaderStages::COMPUTE,
                 ty: BindingType::Texture {
                     multisampled: false,
                     view_dimension: TextureViewDimension::D3,
@@ -158,11 +159,8 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
             },
             BindGroupLayoutEntry {
                 binding: 1,
-                visibility: ShaderStage::COMPUTE,
-                ty: BindingType::Sampler {
-                    comparison: false,
-                    filtering: false,
-                },
+                visibility: ShaderStages::COMPUTE,
+                ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
                 count: None,
             },
         ],
@@ -200,6 +198,7 @@ pub fn update_world(
                 texture: &texture.0,
                 mip_level: 0,
                 origin: Origin3d::ZERO,
+                aspect: TextureAspect::All,
             },
             world.voxel_bytes(),
             world.texture_layout(),

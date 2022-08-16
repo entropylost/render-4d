@@ -11,7 +11,7 @@ use std::time::Instant;
 
 type Rotation4<T> = Rotation<T, 4>;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Resource, Copy, Clone, Debug)]
 pub struct Camera {
     pub rotate_time: Duration,
     pub rotating: Option<Rotating>,

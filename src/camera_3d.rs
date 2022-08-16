@@ -9,7 +9,7 @@ use nalgebra::Vector3;
 use std::f32::consts::PI;
 use std::ops::RangeInclusive;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Resource)]
 pub struct Camera {
     pub x: f32,
     pub y: f32,

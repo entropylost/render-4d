@@ -60,7 +60,7 @@ fn main() -> Result<()> {
         if shaderc::IncludeType::Relative == include_type {
             eprintln!("Only standard paths are supported.");
         }
-        Ok(shaderc::ResolvedInclude {
+        std::result::Result::Ok(shaderc::ResolvedInclude {
             resolved_name: included_src.to_string(),
             content: read_to_string(Path::new(&("./src/".to_owned() + included_src))).unwrap(),
         })

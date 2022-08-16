@@ -2,7 +2,7 @@ use crate::uniform_3d::Uniforms;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
 use nalgebra::Vector2;
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Resource, Copy, Clone, Eq, PartialEq, Debug)]
 pub struct WindowSize(pub Vector2<u32>);
 
 fn get_window_size(winit_windows: &WinitWindows, windows: &Windows) -> WindowSize {

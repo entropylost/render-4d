@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use wgpu::*;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Resource, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct ViewSize(pub u32);
 
 pub struct ViewTexture(pub Texture, pub Extent3d);
@@ -25,7 +25,7 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsage::SAMPLED | TextureUsage::STORAGE | TextureUsage::COPY_DST,
+        usage: TextureUsages::SAMPLED | TextureUsages::STORAGE | TextureUsages::COPY_DST,
     });
     let view = texture.create_view(&TextureViewDescriptor::default());
     let sampler = device.create_sampler(&SamplerDescriptor {
@@ -42,7 +42,7 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsage::STORAGE,
+        usage: TextureUsages::STORAGE,
     });
     let depth_view = depth_texture.create_view(&TextureViewDescriptor::default());
 
@@ -51,7 +51,7 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
         entries: &[
             BindGroupLayoutEntry {
                 binding: 0,
-                visibility: ShaderStage::FRAGMENT,
+                visibility: ShaderStages::FRAGMENT,
                 ty: BindingType::Texture {
                     multisampled: false,
                     view_dimension: TextureViewDimension::D3,
@@ -61,11 +61,8 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
             },
             BindGroupLayoutEntry {
                 binding: 1,
-                visibility: ShaderStage::FRAGMENT,
-                ty: BindingType::Sampler {
-                    comparison: false,
-                    filtering: false,
-                },
+                visibility: ShaderStages::FRAGMENT,
+                ty: BindingType::Sampler(SamplerBindingType::NonFiltering),
                 count: None,
             },
         ],
@@ -91,7 +88,7 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
         entries: &[
             BindGroupLayoutEntry {
                 binding: 0,
-                visibility: ShaderStage::COMPUTE,
+                visibility: ShaderStages::COMPUTE,
                 ty: BindingType::StorageTexture {
                     access: StorageTextureAccess::WriteOnly,
                     format: TextureFormat::R8Uint,
@@ -101,7 +98,7 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
             },
             BindGroupLayoutEntry {
                 binding: 1,
-                visibility: ShaderStage::COMPUTE,
+                visibility: ShaderStages::COMPUTE,
                 ty: BindingType::StorageTexture {
                     access: StorageTextureAccess::WriteOnly,
                     format: TextureFormat::R8Uint,

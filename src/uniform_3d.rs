@@ -7,7 +7,7 @@ use nalgebra::Vector2;
 use wgpu::*;
 
 #[repr(C)]
-#[derive(Pod, Zeroable, Clone, Copy, Debug)]
+#[derive(Resource, Pod, Zeroable, Clone, Copy, Debug)]
 pub struct Uniforms {
     pub camera: CameraInternal,
     pub window_size: Vector2<f32>,
@@ -15,6 +15,7 @@ pub struct Uniforms {
     pub voxel_types: [VoxelTypeInternal; 256],
 }
 
+#[derive(Resource)]
 pub struct UniformBuffer(pub Buffer);
 pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
@@ -22,14 +23,14 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>, window_size: R
     let buffer = device.create_buffer(&BufferDescriptor {
         label: Some("uniform-3d-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
-        usage: BufferUsage::UNIFORM | BufferUsage::COPY_DST,
+        usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
         mapped_at_creation: false,
     });
     let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: Some("uniform-3d-bind-group-layout"),
         entries: &[BindGroupLayoutEntry {
             binding: 0,
-            visibility: ShaderStage::FRAGMENT,
+            visibility: ShaderStages::FRAGMENT,
             ty: BindingType::Buffer {
                 ty: BufferBindingType::Uniform,
                 has_dynamic_offset: false,
