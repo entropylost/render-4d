@@ -1,4 +1,4 @@
-use crate::surface::{DeviceResource, QueueResource, SurfaceFormat, SurfaceResource};
+use crate::surface::{DeviceResource, QueueResource, SurfaceConfigResource, SurfaceResource};
 use crate::uniform_3d::UniformBindGroup;
 use crate::utils::to_u32_array;
 use crate::view::View3dBindGroup;
@@ -29,16 +29,20 @@ pub fn init_render_pipeline(
     device: Res<DeviceResource>,
     uniform_bind_group: Res<UniformBindGroup>,
     view_bind_group: Res<View3dBindGroup>,
-    surface_format: Res<SurfaceFormat>,
+    surface_config: Res<SurfaceConfigResource>,
 ) {
-    let vert = device.create_shader_module(ShaderModuleDescriptor {
-        label: Some("vertex-3d"),
-        source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!("3d.vert.spv")))),
-    });
-    let frag = device.create_shader_module(ShaderModuleDescriptor {
-        label: Some("fragment-3d"),
-        source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!("3d.frag.spv")))),
-    });
+    let vert = unsafe {
+        device.create_shader_module_spirv(&ShaderModuleDescriptorSpirV {
+            label: Some("vertex-3d"),
+            source: Cow::Borrowed(&to_u32_array(include_bytes!("3d.vert.spv"))),
+        })
+    };
+    let frag = unsafe {
+        device.create_shader_module_spirv(&ShaderModuleDescriptorSpirV {
+            label: Some("fragment-3d"),
+            source: Cow::Borrowed(&to_u32_array(include_bytes!("3d.frag.spv"))),
+        })
+    };
 
     let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
         label: Some("vertex-buffer"),
@@ -68,7 +72,7 @@ pub fn init_render_pipeline(
             module: &frag,
             entry_point: "main",
             targets: &[Some(ColorTargetState {
-                format: surface_format.0,
+                format: surface_config.format,
                 blend: Some(BlendState::REPLACE),
                 write_mask: ColorWrites::ALL,
             })],
@@ -87,7 +91,7 @@ pub fn render(
     device: Res<DeviceResource>,
     queue: Res<QueueResource>,
     surface: Res<SurfaceResource>,
-    surface_format: Res<SurfaceFormat>,
+    surface_config: Res<SurfaceConfigResource>,
     render_pipeline: Res<Render3dPipeline>,
     uniform_bind_group: Res<UniformBindGroup>,
     view_3d_bind_group: Res<View3dBindGroup>,
@@ -97,7 +101,7 @@ pub fn render(
     let frame = surface.get_current_texture().unwrap();
     let view = frame.texture.create_view(&TextureViewDescriptor {
         label: Some("surface-texture-view"),
-        format: Some(surface_format.0),
+        format: Some(surface_config.format),
         dimension: Some(TextureViewDimension::D2),
         aspect: TextureAspect::All,
         base_mip_level: 0,

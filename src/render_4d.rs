@@ -20,10 +20,12 @@ pub fn init_render_pipeline(
     world_bind_group: Res<WorldBindGroup>,
     view_bind_group: Res<View4dBindGroup>,
 ) {
-    let comp = device.create_shader_module(ShaderModuleDescriptor {
-        label: Some("compute-4d"),
-        source: ShaderSource::SpirV(Cow::Borrowed(&to_u32_array(include_bytes!("4d.comp.spv")))),
-    });
+    let comp = unsafe {
+        device.create_shader_module_spirv(&ShaderModuleDescriptorSpirV {
+            label: Some("compute-4d"),
+            source: Cow::Borrowed(&to_u32_array(include_bytes!("4d.comp.spv"))),
+        })
+    };
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: Some("render-4d-pipeline-layout"),

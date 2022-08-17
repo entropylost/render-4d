@@ -9,6 +9,7 @@ use bevy::diagnostic::{DiagnosticsPlugin, FrameTimeDiagnosticsPlugin, LogDiagnos
 use bevy::prelude::*;
 use nalgebra::{Vector3, Vector4};
 use palette::Srgb;
+use surface::update_surface;
 
 mod camera_3d;
 mod camera_4d;
@@ -43,11 +44,11 @@ fn main() {
         .add_plugin(camera_4d::CameraPlugin);
     app.add_startup_stage_after(
         StartupStage::Startup,
-        "startup-swap-chain",
+        "startup-surface",
         SystemStage::single_threaded(),
     )
     .add_startup_stage_after(
-        "startup-swap-chain",
+        "startup-surface",
         "startup-bind-groups",
         SystemStage::single_threaded(),
     )
@@ -62,7 +63,7 @@ fn main() {
         SystemStage::single_threaded(),
     );
     app.add_startup_system(init_window_size)
-        .add_startup_system_to_stage("startup-swap-chain", init_surface)
+        .add_startup_system_to_stage("startup-surface", init_surface)
         .add_startup_system_to_stage("startup-bind-groups", uniform_4d::init_uniforms)
         .add_startup_system_to_stage("startup-bind-groups", uniform_3d::init_uniforms)
         .add_startup_system_to_stage("startup-bind-groups", init_world)
@@ -70,19 +71,20 @@ fn main() {
         .add_startup_system_to_stage("startup-pipeline", render_4d::init_render_pipeline)
         .add_startup_system_to_stage("startup-pipeline", render_3d::init_render_pipeline)
         .add_startup_system_to_stage("startup-finish", init_world_data)
-        .add_system(update_window_size.before("update-swap-chain"))
+        .add_system(update_window_size.before("update-surface"))
+        .add_system(update_surface.label("update-surface"))
         .add_system(update_world.label("update-world"))
         .add_system(
             uniform_4d::update_uniform_buffer
                 .label("update-uniforms-4d")
                 .after("camera-4d")
-                .after("update-swap-chain"),
+                .after("update-surface"),
         )
         .add_system(
             uniform_3d::update_uniform_buffer
                 .label("update-uniforms-3d")
                 .after("camera-3d")
-                .after("update-swap-chain"),
+                .after("update-surface"),
         )
         .add_system(
             render_4d::render

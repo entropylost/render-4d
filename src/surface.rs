@@ -1,3 +1,4 @@
+use crate::window_size::WindowSize;
 use crate::world::WorldSize;
 use bevy::prelude::*;
 use bevy::winit::WinitWindows;
@@ -51,12 +52,25 @@ impl DerefMut for SurfaceResource {
 }
 
 #[derive(Resource)]
-pub struct SurfaceFormat(pub TextureFormat);
+pub struct SurfaceConfigResource(pub SurfaceConfiguration);
+impl Deref for SurfaceConfigResource {
+    type Target = SurfaceConfiguration;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl DerefMut for SurfaceConfigResource {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 pub fn init_surface(
     mut commands: Commands,
     winit_windows: NonSend<WinitWindows>,
     windows: Res<Windows>,
+    window_size: Res<WindowSize>,
     world_size: Res<WorldSize>,
 ) {
     let window = winit_windows
@@ -74,7 +88,8 @@ pub fn init_surface(
     let (device, queue) = block_on(adapter.request_device(
         &DeviceDescriptor {
             label: Some("device"),
-            features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES,
+            features: Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
+                | Features::SPIRV_SHADER_PASSTHROUGH,
             limits: Limits {
                 max_texture_dimension_3d: (world_size.0 + 2) * (world_size.0 + 2),
                 ..Default::default()
@@ -84,8 +99,32 @@ pub fn init_surface(
     ))
     .expect("Failed to create device");
 
-    commands.insert_resource(SurfaceFormat(surface.get_supported_formats(&adapter)[0]));
+    let config = SurfaceConfiguration {
+        usage: TextureUsages::RENDER_ATTACHMENT,
+        format: surface.get_supported_formats(&adapter)[0],
+        width: window_size.0.x,
+        height: window_size.0.y,
+        present_mode: PresentMode::Fifo,
+    };
+
+    surface.configure(&device, &config);
+
+    commands.insert_resource(SurfaceConfigResource(config));
     commands.insert_resource(SurfaceResource(surface));
     commands.insert_resource(DeviceResource(device));
     commands.insert_resource(QueueResource(queue));
+}
+
+pub fn update_surface(
+    window_size: Res<WindowSize>,
+    mut config: ResMut<SurfaceConfigResource>,
+    surface: Res<SurfaceResource>,
+    device: Res<DeviceResource>,
+) {
+    if !window_size.is_changed() {
+        return;
+    }
+    config.width = window_size.0.x;
+    config.height = window_size.0.y;
+    surface.configure(&device, &config);
 }
