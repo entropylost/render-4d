@@ -2,12 +2,9 @@ use crate::uniform_4d::Uniforms;
 use crate::world::WorldSize;
 use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
-use nalgebra::Matrix4;
-use nalgebra::Rotation;
-use nalgebra::Vector4;
+use nalgebra::{Matrix4, Rotation, Vector4};
 use std::f32::consts::PI;
-use std::time::Duration;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 type Rotation4<T> = Rotation<T, 4>;
 
@@ -195,20 +192,18 @@ enum Labels {
 }
 
 impl Plugin for CameraPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::new()
                 .label("camera-4d")
-                .with_system(Self::rotate_system.system().label(Labels::Rotate))
+                .with_system(Self::rotate_system.label(Labels::Rotate))
                 .with_system(
                     Self::rotating_system
-                        .system()
                         .label(Labels::Rotating)
                         .after(Labels::Rotate),
                 )
                 .with_system(
                     Self::update_uniform_system
-                        .system()
                         .label(Labels::UpdateUniform)
                         .after(Labels::Rotating),
                 ),

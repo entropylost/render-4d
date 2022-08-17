@@ -1,4 +1,5 @@
 use crate::camera_3d::CameraInternal;
+use crate::surface::{DeviceResource, QueueResource};
 use crate::voxel::VoxelTypeInternal;
 use crate::window_size::WindowSize;
 use bevy::prelude::*;
@@ -17,9 +18,14 @@ pub struct Uniforms {
 
 #[derive(Resource)]
 pub struct UniformBuffer(pub Buffer);
+#[derive(Resource)]
 pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
-pub fn init_uniforms(mut commands: Commands, device: Res<Device>, window_size: Res<WindowSize>) {
+pub fn init_uniforms(
+    mut commands: Commands,
+    device: Res<DeviceResource>,
+    window_size: Res<WindowSize>,
+) {
     let buffer = device.create_buffer(&BufferDescriptor {
         label: Some("uniform-3d-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
@@ -59,7 +65,7 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>, window_size: R
 
 pub fn update_uniform_buffer(
     uniforms: Res<Uniforms>,
-    queue: Res<Queue>,
+    queue: Res<QueueResource>,
     buffer: ResMut<UniformBuffer>,
 ) {
     if uniforms.is_changed() {

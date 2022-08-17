@@ -1,15 +1,20 @@
+use crate::surface::DeviceResource;
 use bevy::prelude::*;
 use wgpu::*;
 
 #[derive(Resource, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct ViewSize(pub u32);
 
+#[derive(Resource)]
 pub struct ViewTexture(pub Texture, pub Extent3d);
+#[derive(Resource)]
 pub struct ViewDepthTexture(pub Texture, pub Extent3d);
+#[derive(Resource)]
 pub struct View3dBindGroup(pub BindGroup, pub BindGroupLayout);
+#[derive(Resource)]
 pub struct View4dBindGroup(pub BindGroup, pub BindGroupLayout);
 
-pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device>) {
+pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<DeviceResource>) {
     let size = size.0;
 
     let extent = Extent3d {
@@ -25,7 +30,7 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsages::SAMPLED | TextureUsages::STORAGE | TextureUsages::COPY_DST,
+        usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_DST,
     });
     let view = texture.create_view(&TextureViewDescriptor::default());
     let sampler = device.create_sampler(&SamplerDescriptor {
@@ -42,7 +47,7 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsages::STORAGE,
+        usage: TextureUsages::STORAGE_BINDING,
     });
     let depth_view = depth_texture.create_view(&TextureViewDescriptor::default());
 

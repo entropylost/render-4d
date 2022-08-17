@@ -1,15 +1,12 @@
-use crate::uniform_3d;
-use crate::voxel::VoxelId;
-use crate::voxel::VoxelTypeInternal;
-use crate::VoxelType;
+use crate::surface::{DeviceResource, QueueResource};
+use crate::voxel::{VoxelId, VoxelTypeInternal};
+use crate::{uniform_3d, VoxelType};
 use arrayvec::ArrayVec;
 use bevy::prelude::*;
 use nalgebra::Vector4;
-use ndarray::s;
-use ndarray::Array4;
+use ndarray::{s, Array4};
 use std::num::NonZeroU32;
-use std::ops::Index;
-use std::ops::IndexMut;
+use std::ops::{Index, IndexMut};
 use wgpu::*;
 
 #[derive(Resource, Copy, Clone, Debug, PartialEq, Eq)]
@@ -112,9 +109,10 @@ impl IndexMut<Vector4<u32>> for World {
 
 #[derive(Resource)]
 pub struct WorldTexture(pub Texture, pub Extent3d);
+#[derive(Resource)]
 pub struct WorldBindGroup(pub BindGroup, pub BindGroupLayout);
 
-pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Device>) {
+pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<DeviceResource>) {
     let size = size.0;
 
     let world = World::new(size);
@@ -134,7 +132,7 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsages::SAMPLED | TextureUsages::COPY_DST,
+        usage: TextureUsages::COPY_DST,
     });
     let view = texture.create_view(&TextureViewDescriptor::default());
     let sampler = device.create_sampler(&SamplerDescriptor {
@@ -188,7 +186,7 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
 
 pub fn update_world(
     world: Res<World>,
-    queue: Res<Queue>,
+    queue: Res<QueueResource>,
     texture: Res<WorldTexture>,
     mut uniforms: ResMut<uniform_3d::Uniforms>,
 ) {

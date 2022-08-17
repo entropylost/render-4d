@@ -1,8 +1,6 @@
-use bytemuck::Pod;
-use bytemuck::Zeroable;
+use bytemuck::{Pod, Zeroable};
 use derive_new::new;
-use palette::LinSrgb;
-use palette::Srgb;
+use palette::{LinSrgb, Srgb};
 
 #[derive(new, Copy, Clone, Debug, PartialEq, Default)]
 pub struct VoxelType {

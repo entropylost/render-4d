@@ -2,10 +2,7 @@ use crate::uniform_3d::Uniforms;
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
-use nalgebra::Matrix3;
-use nalgebra::Matrix4x3;
-use nalgebra::UnitQuaternion;
-use nalgebra::Vector3;
+use nalgebra::{Matrix3, Matrix4x3, UnitQuaternion, Vector3};
 use std::f32::consts::PI;
 use std::ops::RangeInclusive;
 
@@ -165,26 +162,23 @@ enum Labels {
 }
 
 impl Plugin for CameraPlugin {
-    fn build(&self, app: &mut AppBuilder) {
+    fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::new()
                 .label("camera-3d")
-                .with_system(Self::cursor_grab_system.system().label(Labels::CursorGrab))
+                .with_system(Self::cursor_grab_system.label(Labels::CursorGrab))
                 .with_system(
                     Self::rotate_system
-                        .system()
                         .label(Labels::Rotate)
                         .after(Labels::CursorGrab),
                 )
                 .with_system(
                     Self::move_system
-                        .system()
                         .label(Labels::Move)
                         .after(Labels::CursorGrab),
                 )
                 .with_system(
                     Self::update_uniform_system
-                        .system()
                         .label(Labels::UpdateUniform)
                         .after(Labels::Rotate)
                         .after(Labels::Move),

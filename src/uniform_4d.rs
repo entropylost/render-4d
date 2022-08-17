@@ -1,4 +1,5 @@
 use crate::camera_4d::CameraInternal;
+use crate::surface::{DeviceResource, QueueResource};
 use crate::world::WorldSize;
 use bevy::prelude::*;
 use bytemuck::{Pod, Zeroable};
@@ -13,9 +14,14 @@ pub struct Uniforms {
 
 #[derive(Resource)]
 pub struct UniformBuffer(pub Buffer);
+#[derive(Resource)]
 pub struct UniformBindGroup(pub BindGroup, pub BindGroupLayout);
 
-pub fn init_uniforms(mut commands: Commands, device: Res<Device>, world_size: Res<WorldSize>) {
+pub fn init_uniforms(
+    mut commands: Commands,
+    device: Res<DeviceResource>,
+    world_size: Res<WorldSize>,
+) {
     let buffer = device.create_buffer(&BufferDescriptor {
         label: Some("uniform-4d-buffer"),
         size: std::mem::size_of::<Uniforms>() as u64,
@@ -53,7 +59,7 @@ pub fn init_uniforms(mut commands: Commands, device: Res<Device>, world_size: Re
 
 pub fn update_uniform_buffer(
     uniforms: Res<Uniforms>,
-    queue: Res<Queue>,
+    queue: Res<QueueResource>,
     buffer: ResMut<UniformBuffer>,
 ) {
     if uniforms.is_changed() {

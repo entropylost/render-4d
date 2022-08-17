@@ -15,14 +15,14 @@ fn get_window_size(winit_windows: &WinitWindows, windows: &Windows) -> WindowSiz
 
 pub fn init_window_size(
     mut commands: Commands,
-    winit_windows: Res<WinitWindows>,
+    winit_windows: NonSend<WinitWindows>,
     windows: Res<Windows>,
 ) {
     commands.insert_resource(get_window_size(&winit_windows, &windows));
 }
 
 pub fn update_window_size(
-    winit_windows: Res<WinitWindows>,
+    winit_windows: NonSend<WinitWindows>,
     windows: Res<Windows>,
     mut window_size: ResMut<WindowSize>,
     mut uniforms: ResMut<Uniforms>,
