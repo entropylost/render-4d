@@ -52,7 +52,7 @@ fn main() -> Result<()> {
         .into_iter()
         .collect::<Result<Vec<_>>>()?;
 
-    let mut compiler = shaderc::Compiler::new().context("Unable to create shader compiler")?;
+    let compiler = shaderc::Compiler::new().context("Unable to create shader compiler")?;
     let mut compile_options = shaderc::CompileOptions::new().unwrap();
     compile_options.set_generate_debug_info();
     compile_options.set_optimization_level(shaderc::OptimizationLevel::Performance);

@@ -132,7 +132,7 @@ pub fn init_world(mut commands: Commands, size: Res<WorldSize>, device: Res<Devi
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsages::COPY_DST,
+        usage: TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING,
     });
     let view = texture.create_view(&TextureViewDescriptor::default());
     let sampler = device.create_sampler(&SamplerDescriptor {

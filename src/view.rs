@@ -30,7 +30,9 @@ pub fn init_view(mut commands: Commands, size: Res<ViewSize>, device: Res<Device
         sample_count: 1,
         dimension: TextureDimension::D3,
         format: TextureFormat::R8Uint,
-        usage: TextureUsages::STORAGE_BINDING | TextureUsages::COPY_DST,
+        usage: TextureUsages::STORAGE_BINDING
+            | TextureUsages::COPY_DST
+            | TextureUsages::TEXTURE_BINDING,
     });
     let view = texture.create_view(&TextureViewDescriptor::default());
     let sampler = device.create_sampler(&SamplerDescriptor {
