@@ -98,7 +98,15 @@ pub fn render(
     vertex_buffer: Res<VertexBuffer>,
 ) {
     let vertex_buffer = &vertex_buffer.0;
-    let frame = surface.get_current_texture().unwrap();
+    let frame = match surface.get_current_texture() {
+        Ok(frame) => frame,
+        Err(err) => {
+            eprintln!("{:?}", err);
+            println!("{:?}", surface_config.0);
+            surface.configure(&device, &surface_config);
+            surface.get_current_texture().unwrap()
+        }
+    };
     let view = frame.texture.create_view(&TextureViewDescriptor {
         label: Some("surface-texture-view"),
         format: Some(surface_config.format),
@@ -139,4 +147,6 @@ pub fn render(
     }
 
     queue.submit(std::iter::once(encoder.finish()));
+
+    frame.present();
 }
